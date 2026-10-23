@@ -8,7 +8,7 @@ Escenario: Consultar historial vacío
     Entonces la respuesta HTTP es 200
     Y el historial contiene cero atenciones
 
-Escenario: Acceso no autorizado
+Escenario: Acceso denegado a otro propietario
     Dado que ya registré una mascota
     Cuando otro propietario consulta su historial
     Entonces la respuesta HTTP es 403
