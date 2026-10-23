@@ -1,17 +1,19 @@
+
 using Microsoft.EntityFrameworkCore;
-using VetPax.Application.Common.Ports;
-using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
-using VetPax.Domain.Modules.PetClinicalCare.Repositories;
-using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
-using VetPax.Infrastructure.Persistence;
 using System.Text.Json.Serialization;
 using VetPax.Api;
-using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
+using VetPax.Application.Common.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
+using VetPax.Domain.Modules.PetClinicalCare.Repositories;
+using VetPax.Infrastructure.Modules.IdentityAccessManagement;
+using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
+using VetPax.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// Controllers and JSON configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -22,13 +24,13 @@ builder.Services.AddControllers()
 
 builder.Services.AddOpenApi();
 
+// MySQL connection
 var connectionString = builder.Configuration
-                           .GetConnectionString("VetPaxDb")
-                       ?? throw new InvalidOperationException(
-                           "VetPax database connection is not configured."
-                       );
+    .GetConnectionString("VetPaxDb")
+    ?? throw new InvalidOperationException(
+        "VetPax database connection is not configured."
+    );
 
-// Configure MySQL
 builder.Services.AddDbContext<VetPaxDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -36,22 +38,29 @@ builder.Services.AddDbContext<VetPaxDbContext>(options =>
     )
 );
 
-// Register repositories
+// PetClinicalCare dependency injection
 builder.Services.AddScoped<IPetRepository, PetRepository>();
+
 builder.Services.AddScoped<
     IClinicalRecordRepository,
     ClinicalRecordRepository>();
 
-// Register application services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<RegisterPetHandler>();
 builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
+
 builder.Services.AddPetClinicalCare();
+
+// Keycloak and JWT authentication
+builder.Services.AddIamInfrastructure(
+    builder.Configuration,
+    builder.Environment
+);
 
 var app = builder.Build();
 
-
+// Development configuration
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -63,18 +72,21 @@ if (app.Environment.IsDevelopment())
             "VetPax API v1"
         );
     });
+
     using var scope = app.Services.CreateScope();
 
     var dbContext = scope.ServiceProvider
         .GetRequiredService<VetPaxDbContext>();
 
     await dbContext.Database.MigrateAsync();
-    // Keep your existing database migration code here
-    // if it is already configured.
 }
 
-
+// HTTP pipeline
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();
