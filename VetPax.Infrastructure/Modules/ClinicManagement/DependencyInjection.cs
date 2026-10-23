@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿
+using Microsoft.Extensions.DependencyInjection;
 using VetPax.Application.Modules.ClinicManagement.Ports;
 using VetPax.Application.Modules.ClinicManagement.Services;
+using VetPax.Application.Modules.ClinicManagement.UseCases.AssignVeterinarian;
 using VetPax.Application.Modules.ClinicManagement.UseCases.GetClinicPatients;
 using VetPax.Application.Modules.ClinicManagement.UseCases.GetClinicProfile;
+using VetPax.Application.Modules.ClinicManagement.UseCases.ProvisionClinic;
 using VetPax.Application.Modules.ClinicManagement.UseCases.UpdateClinicProfile;
 using VetPax.Domain.Modules.ClinicManagement.Repositories;
 using VetPax.Domain.Modules.ClinicManagement.Services;
@@ -16,7 +19,9 @@ public static class DependencyInjection
     public static IServiceCollection AddClinicManagementInfrastructure(
         this IServiceCollection services)
     {
-        services.AddScoped<IClinicRepository, ClinicRepository>();
+        services.AddScoped<
+            IClinicRepository,
+            ClinicRepository>();
 
         services.AddScoped<
             IClinicMembershipPort,
@@ -32,6 +37,17 @@ public static class DependencyInjection
         services.AddScoped<GetClinicProfileHandler>();
         services.AddScoped<UpdateClinicProfileHandler>();
         services.AddScoped<GetClinicPatientsHandler>();
+
+        services.AddHttpClient<
+            IVeterinarianIdentityDirectoryPort,
+            KeycloakVeterinarianIdentityDirectoryAdapter>();
+
+        services.AddScoped<
+            IClinicVeterinarianWriterPort,
+            ClinicVeterinarianWriterAdapter>();
+
+        services.AddScoped<ProvisionClinicHandler>();
+        services.AddScoped<AssignVeterinarianHandler>();
 
         return services;
     }

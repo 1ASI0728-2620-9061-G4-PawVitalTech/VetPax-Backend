@@ -184,6 +184,29 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("clinic_veterinarians", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.PetClinicalCare.Persistence.PetClinicLinkRow", b =>
+                {
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("LinkedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("linked_at");
+
+                    b.HasKey("PetId", "ClinicId");
+
+                    b.ToTable("pet_clinic_links", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Domain.Modules.PetClinicalCare.Aggregates.ClinicalRecord", b =>
                 {
                     b.OwnsMany("VetPax.Domain.Modules.PetClinicalCare.Entities.ClinicalAttention", "Attentions", b1 =>

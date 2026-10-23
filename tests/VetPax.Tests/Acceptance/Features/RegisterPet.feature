@@ -1,5 +1,5 @@
 # language: es
-
+@pet
 Característica: US01 - Registrar mascota
 
 Escenario: Registro exitoso

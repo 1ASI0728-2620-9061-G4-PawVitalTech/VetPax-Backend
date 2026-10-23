@@ -24,7 +24,7 @@ public sealed class PetClinicalCareSteps
     private Guid _petId;
     private string? _role;
 
-    [BeforeScenario]
+    [BeforeScenario("pet")]
     public void Setup()
     {
         _factory = new VetPaxApiFactory();
@@ -193,7 +193,7 @@ public sealed class PetClinicalCareSteps
         _response = await _client.SendAsync(request);
     }
 
-    [AfterScenario]
+    [AfterScenario("pet")]
     public async Task Cleanup()
     {
         try
