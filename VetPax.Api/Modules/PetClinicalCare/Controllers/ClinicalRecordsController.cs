@@ -16,18 +16,15 @@ public sealed class ClinicalRecordsController : ControllerBase
     private readonly GetClinicalHistoryHandler _handler;
     private readonly RegisterClinicalAttentionHandler _registerHandler;
     private readonly IAuthenticatedUserPort _currentUser;
-    private readonly IWebHostEnvironment _environment;
 
     public ClinicalRecordsController(
         GetClinicalHistoryHandler handler,
         RegisterClinicalAttentionHandler registerHandler,
-        IAuthenticatedUserPort currentUser,
-        IWebHostEnvironment environment)
+        IAuthenticatedUserPort currentUser)
     {
         _handler = handler;
         _registerHandler = registerHandler;
         _currentUser = currentUser;
-        _environment = environment;
     }
 
     [HttpGet]
@@ -44,10 +41,12 @@ public sealed class ClinicalRecordsController : ControllerBase
         CancellationToken cancellationToken)
     {
         if (petId == Guid.Empty)
+        {
             return BadRequest(new
             {
                 message = "A valid pet ID is required."
             });
+        }
 
         var identity = await _currentUser.GetCurrentAsync(
             cancellationToken);
@@ -68,10 +67,12 @@ public sealed class ClinicalRecordsController : ControllerBase
             );
 
             if (result is null)
+            {
                 return NotFound(new
                 {
                     message = "Pet or clinical record not found."
                 });
+            }
 
             return Ok(new ClinicalHistoryResponse(
                 result.PetId,
@@ -103,32 +104,23 @@ public sealed class ClinicalRecordsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RegisterAttention(
         Guid petId,
+        [FromQuery] Guid clinicId,
         [FromBody] RegisterClinicalAttentionRequest request,
-        [FromHeader(Name = "X-Dev-Clinic-Id")] string? devClinicId,
         CancellationToken cancellationToken)
     {
-        // US03: clinic authorization integration pending.
-        if (!_environment.IsDevelopment())
-            return StatusCode(403, new
-            {
-                message = "Clinical authorization integration is required."
-            });
-
-        var identity = await _currentUser.GetCurrentAsync(
-            cancellationToken);
-
-        if (identity is null)
-            return Unauthorized();
-
-        if (petId == Guid.Empty ||
-            !Guid.TryParse(devClinicId, out var clinicId) ||
-            clinicId == Guid.Empty)
+        if (petId == Guid.Empty || clinicId == Guid.Empty)
         {
             return BadRequest(new
             {
                 message = "Valid pet and clinic IDs are required."
             });
         }
+
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null)
+            return Unauthorized();
 
         try
         {
@@ -146,12 +138,13 @@ public sealed class ClinicalRecordsController : ControllerBase
                 request.Diagnosis,
                 request.TreatmentSummary,
                 request.Observations,
-                request.Indicators?.Select(i =>
-                    new ClinicalIndicatorInput(
+                request.Indicators?
+                    .Select(i => new ClinicalIndicatorInput(
                         i.Name,
                         i.Value,
                         i.Unit
-                    )).ToArray()
+                    ))
+                    .ToArray()
             );
 
             var result = await _registerHandler.HandleAsync(
@@ -172,7 +165,10 @@ public sealed class ClinicalRecordsController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new
+            {
+                message = ex.Message
+            });
         }
         catch (UnauthorizedAccessException)
         {
@@ -183,7 +179,10 @@ public sealed class ClinicalRecordsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new { message = ex.Message });
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
         }
     }
 }

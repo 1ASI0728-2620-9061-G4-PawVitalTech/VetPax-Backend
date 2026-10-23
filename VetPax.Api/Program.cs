@@ -53,7 +53,7 @@ builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
 
 
-
+builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
 builder.Services.AddClinicManagementInfrastructure();
 builder.Services.AddPetClinicLinks();
