@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using VetPax.Domain.Modules.PetClinicalCare.Aggregates;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
+using VetPax.Infrastructure.Modules.ClinicManagement.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -16,6 +17,17 @@ public sealed class VetPaxDbContext : DbContext
     public DbSet<Pet> Pets => Set<Pet>();
     public DbSet<ClinicalRecord> ClinicalRecords
         => Set<ClinicalRecord>();
+    
+    public DbSet<ClinicRow> Clinics => Set<ClinicRow>();
+
+    public DbSet<ClinicAdministratorRow> ClinicAdministrators =>
+        Set<ClinicAdministratorRow>();
+
+    public DbSet<ClinicOpeningHourRow> ClinicOpeningHours =>
+        Set<ClinicOpeningHourRow>();
+
+    public DbSet<ClinicVeterinarianRow> ClinicVeterinarians =>
+        Set<ClinicVeterinarianRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -166,5 +178,7 @@ public sealed class VetPaxDbContext : DbContext
                 .HasField("_attentions")
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
+        modelBuilder.ConfigureClinicManagement();
     }
+    
 }
