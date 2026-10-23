@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MySqlConnector;
+using VetPax.Application.Modules.ClinicManagement.Ports;
 using VetPax.Infrastructure.Persistence;
 
 namespace VetPax.Tests.Acceptance.Support;
@@ -30,10 +31,8 @@ public sealed class VetPaxApiFactory
             database,
             "vetpax_test_db",
             StringComparison.OrdinalIgnoreCase))
-        {
             throw new InvalidOperationException(
                 "Only vetpax_test_db is allowed.");
-        }
 
         builder.UseEnvironment("Development");
 
@@ -66,8 +65,10 @@ public sealed class VetPaxApiFactory
             {
                 options.DefaultAuthenticateScheme =
                     TestAuthHandler.Scheme;
+
                 options.DefaultChallengeScheme =
                     TestAuthHandler.Scheme;
+
                 options.DefaultForbidScheme =
                     TestAuthHandler.Scheme;
             })
@@ -76,6 +77,16 @@ public sealed class VetPaxApiFactory
                 TestAuthHandler>(
                 TestAuthHandler.Scheme,
                 _ => { });
+
+            services.RemoveAll<
+                IVeterinarianIdentityDirectoryPort>();
+
+            services.AddSingleton<TestVeterinarianDirectory>();
+
+            services.AddSingleton<
+                IVeterinarianIdentityDirectoryPort>(
+                sp => sp.GetRequiredService<
+                    TestVeterinarianDirectory>());
         });
     }
 }

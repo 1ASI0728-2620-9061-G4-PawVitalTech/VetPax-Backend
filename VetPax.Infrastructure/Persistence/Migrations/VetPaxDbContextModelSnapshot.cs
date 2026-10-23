@@ -80,6 +80,133 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("pets", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid>("AdministratorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("administrator_id");
+
+                    b.HasKey("ClinicId", "AdministratorId");
+
+                    b.ToTable("clinic_administrators", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicOpeningHourRow", b =>
+                {
+                    b.Property<Guid>("OpeningHoursId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("opening_hours_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<TimeOnly>("CloseTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("close_time");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("day_of_week");
+
+                    b.Property<TimeOnly>("OpenTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("open_time");
+
+                    b.HasKey("OpeningHoursId");
+
+                    b.HasIndex("ClinicId");
+
+                    b.ToTable("clinic_opening_hours", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("phone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("ClinicId");
+
+                    b.ToTable("clinics", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicVeterinarianRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.HasKey("ClinicId", "VeterinarianId");
+
+                    b.ToTable("clinic_veterinarians", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.PetClinicalCare.Persistence.PetClinicLinkRow", b =>
+                {
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("LinkedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("linked_at");
+
+                    b.HasKey("PetId", "ClinicId");
+
+                    b.ToTable("pet_clinic_links", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Domain.Modules.PetClinicalCare.Aggregates.ClinicalRecord", b =>
                 {
                     b.OwnsMany("VetPax.Domain.Modules.PetClinicalCare.Entities.ClinicalAttention", "Attentions", b1 =>
@@ -164,6 +291,33 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Attentions");
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicOpeningHourRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicVeterinarianRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

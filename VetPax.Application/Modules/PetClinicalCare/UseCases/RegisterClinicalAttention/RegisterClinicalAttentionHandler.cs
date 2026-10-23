@@ -39,19 +39,26 @@ public sealed class RegisterClinicalAttentionHandler
         ArgumentNullException.ThrowIfNull(command);
 
         var requester = command.Requester;
+
         if (requester is null ||
             !requester.IsVeterinarian() ||
+            requester.UserId == Guid.Empty ||
             requester.ClinicId is not { } clinicId ||
             clinicId.Value == Guid.Empty)
         {
-            throw new UnauthorizedAccessException();
+            throw new UnauthorizedAccessException(
+                "Veterinarian authentication is required.");
         }
 
         var pet = await _pets.FindByIdAsync(
-            command.PetId, cancellationToken);
+            command.PetId,
+            cancellationToken);
 
         if (pet is null)
-            throw new KeyNotFoundException("Pet not found.");
+        {
+            throw new KeyNotFoundException(
+                "Pet not found.");
+        }
 
         var veterinarianId =
             await _authorization.GetAuthorizedVeterinarianAsync(
@@ -63,19 +70,25 @@ public sealed class RegisterClinicalAttentionHandler
         if (veterinarianId is null ||
             veterinarianId.Value.Value == Guid.Empty)
         {
-            throw new UnauthorizedAccessException();
+            throw new UnauthorizedAccessException(
+                "Veterinarian is not authorized for this patient.");
         }
 
         var record = await _records.FindByPetIdAsync(
-            command.PetId, cancellationToken);
+            command.PetId,
+            cancellationToken);
 
         if (record is null)
+        {
             throw new KeyNotFoundException(
                 "Clinical record not found.");
+        }
 
         var indicators = command.Indicators?
             .Select(i => new ClinicalIndicator(
-                i.Name, i.Value, i.Unit))
+                i.Name,
+                i.Value,
+                i.Unit))
             .ToArray();
 
         var attention = new ClinicalAttention(
@@ -92,11 +105,16 @@ public sealed class RegisterClinicalAttentionHandler
 
         record.RegisterAttention(attention);
 
-        await _records.SaveAsync(record, cancellationToken);
-        await _unitOfWork.CommitAsync(cancellationToken);
+        await _records.SaveAsync(
+            record,
+            cancellationToken);
+
+        await _unitOfWork.CommitAsync(
+            cancellationToken);
 
         await _events.PublishAsync(
-            record.PullDomainEvents(), cancellationToken);
+            record.PullDomainEvents(),
+            cancellationToken);
 
         await _notifier.NotifyClinicalRecordUpdatedAsync(
             record.PetId,

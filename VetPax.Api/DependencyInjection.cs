@@ -43,7 +43,7 @@ public static class DependencyInjection
         // Infrastructure Adapters
         services.AddScoped<
             IClinicalAuthorizationPort,
-            DenyAllClinicalAuthorizationAdapter>();
+            VerifiedClinicalAuthorizationAdapter>();
 
         services.AddScoped<
             IDomainEventPublisher,

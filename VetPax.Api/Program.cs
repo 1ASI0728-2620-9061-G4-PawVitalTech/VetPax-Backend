@@ -10,6 +10,8 @@ using VetPax.Domain.Modules.PetClinicalCare.Repositories;
 using VetPax.Infrastructure.Modules.IdentityAccessManagement;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
 using VetPax.Infrastructure.Persistence;
+using VetPax.Infrastructure.Modules.ClinicManagement;
+using VetPax.Infrastructure.Modules.PetClinicalCare;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,7 +52,11 @@ builder.Services.AddScoped<RegisterPetHandler>();
 builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
 
+
+builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
+builder.Services.AddClinicManagementInfrastructure();
+builder.Services.AddPetClinicLinks();
 
 // Keycloak and JWT authentication
 builder.Services.AddIamInfrastructure(

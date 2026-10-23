@@ -83,4 +83,32 @@ public sealed class Clinic
         _domainEvents.Clear();
         return events;
     }
+    
+    public static Clinic Rehydrate(
+        ClinicId clinicId,
+        ClinicGeneralData generalData,
+        OpeningSchedule schedule,
+        IEnumerable<AdministratorId> administrators,
+        DateTime updatedAt)
+    {
+        ArgumentNullException.ThrowIfNull(administrators);
+
+        var ids = administrators.Distinct().ToArray();
+
+        if (ids.Length == 0)
+            throw new InvalidOperationException(
+                "A clinic requires an administrator.");
+
+        var clinic = new Clinic(
+            clinicId,
+            ids[0],
+            generalData,
+            schedule);
+
+        clinic._administrators.AddRange(ids.Skip(1));
+        clinic.UpdatedAt = updatedAt;
+
+        return clinic;
+    }
+
 }

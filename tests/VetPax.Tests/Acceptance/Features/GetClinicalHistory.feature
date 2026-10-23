@@ -1,5 +1,5 @@
 # language: es
-
+@pet
 Característica: US02 - Consultar historial clínico
 
 Escenario: Consultar historial vacío
