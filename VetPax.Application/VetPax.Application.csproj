@@ -10,4 +10,9 @@
       <ProjectReference Include="..\VetPax.Domain\VetPax.Domain.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Modules\ClinicManagement\Ports\" />
+      <Folder Include="Modules\ClinicManagement\Services\" />
+    </ItemGroup>
+
 </Project>
