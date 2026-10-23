@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VetPax.Domain.Modules.PetClinicalCare.Aggregates;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Infrastructure.Modules.ClinicManagement.Persistence;
+using VetPax.Infrastructure.Modules.PetClinicalCare.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -28,6 +29,9 @@ public sealed class VetPaxDbContext : DbContext
 
     public DbSet<ClinicVeterinarianRow> ClinicVeterinarians =>
         Set<ClinicVeterinarianRow>();
+    
+    public DbSet<PetClinicLinkRow> PetClinicLinks =>
+        Set<PetClinicLinkRow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -179,6 +183,31 @@ public sealed class VetPaxDbContext : DbContext
                 .UsePropertyAccessMode(PropertyAccessMode.Field);
         });
         modelBuilder.ConfigureClinicManagement();
+        
+        modelBuilder.Entity<PetClinicLinkRow>(entity =>
+        {
+            entity.ToTable("pet_clinic_links");
+
+            entity.HasKey(x => new
+            {
+                x.PetId,
+                x.ClinicId
+            });
+
+            entity.Property(x => x.PetId)
+                .HasColumnName("pet_id");
+
+            entity.Property(x => x.ClinicId)
+                .HasColumnName("clinic_id");
+
+            entity.Property(x => x.IsActive)
+                .HasColumnName("is_active");
+
+            entity.Property(x => x.LinkedAt)
+                .HasColumnName("linked_at")
+                .HasColumnType("datetime(6)");
+        });
+
     }
     
 }
