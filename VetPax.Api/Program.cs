@@ -12,6 +12,7 @@ using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
 using VetPax.Infrastructure.Persistence;
 using VetPax.Infrastructure.Modules.ClinicManagement;
 using VetPax.Infrastructure.Modules.PetClinicalCare;
+using VetPax.Infrastructure.Modules.AppointmentManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -57,6 +58,7 @@ builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
 builder.Services.AddClinicManagementInfrastructure();
 builder.Services.AddPetClinicLinks();
+builder.Services.AddAppointmentManagementInfrastructure();
 
 // Keycloak and JWT authentication
 builder.Services.AddIamInfrastructure(

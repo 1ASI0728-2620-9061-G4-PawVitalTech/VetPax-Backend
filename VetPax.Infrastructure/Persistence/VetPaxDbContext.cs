@@ -4,6 +4,7 @@ using VetPax.Domain.Modules.PetClinicalCare.Aggregates;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Infrastructure.Modules.ClinicManagement.Persistence;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Persistence;
+using VetPax.Infrastructure.Modules.AppointmentManagement.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -32,7 +33,18 @@ public sealed class VetPaxDbContext : DbContext
     
     public DbSet<PetClinicLinkRow> PetClinicLinks =>
         Set<PetClinicLinkRow>();
+    public DbSet<AppointmentRow> Appointments
+        => Set<AppointmentRow>();
 
+    public DbSet<AppointmentOutboxRow> AppointmentOutbox
+        => Set<AppointmentOutboxRow>();
+
+    public DbSet<AppointmentReminderRow> AppointmentReminders
+        => Set<AppointmentReminderRow>();
+
+    public DbSet<AppointmentAttentionLinkRow> AppointmentAttentionLinks
+        => Set<AppointmentAttentionLinkRow>();
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -207,6 +219,7 @@ public sealed class VetPaxDbContext : DbContext
                 .HasColumnName("linked_at")
                 .HasColumnType("datetime(6)");
         });
+        modelBuilder.ConfigureAppointmentManagement();
 
     }
     
