@@ -171,7 +171,31 @@ public static class AdherenceModelConfiguration
                 .HasColumnName("attempt_count");
 
             entity.HasIndex(x => x.PublishedAtUtc);
-        });
+        
+            
+            entity.Property(x => x.NextAttemptAtUtc)
+                .HasColumnName("next_attempt_at_utc")
+                .HasColumnType("datetime(6)");
+
+            entity.Property(x => x.LeaseToken)
+                .HasColumnName("lease_token");
+
+            entity.Property(x => x.LockedUntilUtc)
+                .HasColumnName("locked_until_utc")
+                .HasColumnType("datetime(6)");
+
+            entity.Property(x => x.LastError)
+                .HasColumnName("last_error")
+                .HasMaxLength(1024);
+
+            entity.HasIndex(x => new
+            {
+                x.PublishedAtUtc,
+                x.NextAttemptAtUtc,
+                x.LockedUntilUtc
+            });
+
+    });
 
         return modelBuilder;
     }

@@ -1,4 +1,3 @@
-
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using VetPax.Api;
@@ -26,6 +25,10 @@ using VetPax.Api.Modules.AdherenceGamification.Adapters;
 using VetPax.Api.Modules.AdherenceGamification.BackgroundServices;
 using VetPax.Application.Modules.AdherenceGamification.Ports;
 using VetPax.Infrastructure.Modules.AdherenceGamification;
+using VetPax.Infrastructure.Messaging;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
+using VetPax.Application.Common.Ports;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -121,6 +124,17 @@ builder.Services.AddAdherenceGamificationInfrastructure(
 
 builder.Services.AddHostedService<AdherenceRecognitionWorker>();
 
+
+// Preserve development logging.
+builder.Services.AddScoped<DevelopmentDomainEventPublisher>();
+
+// Route AppointmentManagement and MedicationTreatment
+// events to AdherenceGamification.
+builder.Services.AddScoped<
+    IDomainEventPublisher,
+    AdherenceDomainEventPublisher>();
+
+builder.Services.AddHostedService<AdherenceOutboxWorker>();
 
 var app = builder.Build();
 

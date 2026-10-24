@@ -96,6 +96,23 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         .HasColumnType("varchar(250)")
                         .HasColumnName("event_type");
 
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
                     b.Property<DateTime>("OccurredAtUtc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("occurred_at_utc");
@@ -112,6 +129,8 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.HasKey("EventId");
 
                     b.HasIndex("PublishedAtUtc");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc", "LockedUntilUtc");
 
                     b.ToTable("adherence_outbox", (string)null);
                 });

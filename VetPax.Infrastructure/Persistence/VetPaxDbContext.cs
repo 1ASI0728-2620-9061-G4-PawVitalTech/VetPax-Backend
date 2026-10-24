@@ -8,7 +8,6 @@ using VetPax.Infrastructure.Modules.AppointmentManagement.Persistence;
 using VetPax.Infrastructure.Modules.MedicationTreatment.Persistence;
 using VetPax.Infrastructure.Modules.NutritionManagement.Persistence;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Persistence;
-using VetPax.Infrastructure.Modules.AdherenceGamification.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -21,10 +20,12 @@ public sealed class VetPaxDbContext : DbContext
     }
 
     public DbSet<Pet> Pets => Set<Pet>();
-    public DbSet<ClinicalRecord> ClinicalRecords
-        => Set<ClinicalRecord>();
-    
-    public DbSet<ClinicRow> Clinics => Set<ClinicRow>();
+
+    public DbSet<ClinicalRecord> ClinicalRecords =>
+        Set<ClinicalRecord>();
+
+    public DbSet<ClinicRow> Clinics =>
+        Set<ClinicRow>();
 
     public DbSet<ClinicAdministratorRow> ClinicAdministrators =>
         Set<ClinicAdministratorRow>();
@@ -34,28 +35,33 @@ public sealed class VetPaxDbContext : DbContext
 
     public DbSet<ClinicVeterinarianRow> ClinicVeterinarians =>
         Set<ClinicVeterinarianRow>();
-    
+
     public DbSet<PetClinicLinkRow> PetClinicLinks =>
         Set<PetClinicLinkRow>();
-    public DbSet<AppointmentRow> Appointments
-        => Set<AppointmentRow>();
 
-    public DbSet<AppointmentOutboxRow> AppointmentOutbox
-        => Set<AppointmentOutboxRow>();
+    public DbSet<AppointmentRow> Appointments =>
+        Set<AppointmentRow>();
 
-    public DbSet<AppointmentReminderRow> AppointmentReminders
-        => Set<AppointmentReminderRow>();
+    public DbSet<AppointmentOutboxRow> AppointmentOutbox =>
+        Set<AppointmentOutboxRow>();
 
-    public DbSet<AppointmentAttentionLinkRow> AppointmentAttentionLinks
-        => Set<AppointmentAttentionLinkRow>();
-    
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public DbSet<AppointmentReminderRow> AppointmentReminders =>
+        Set<AppointmentReminderRow>();
+
+    public DbSet<AppointmentAttentionLinkRow> AppointmentAttentionLinks =>
+        Set<AppointmentAttentionLinkRow>();
+
+    protected override void OnModelCreating(
+        ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Bounded Context configurations
         modelBuilder.ApplyMedicationTreatmentModel();
         modelBuilder.ApplyNutritionManagementModel();
         modelBuilder.ApplyAdherenceGamificationModel();
-        modelBuilder.ApplyAdherenceGamificationModel();
+
+        // PetClinicalCare
         modelBuilder.Entity<Pet>(pet =>
         {
             pet.ToTable("pets");
@@ -163,46 +169,54 @@ public sealed class VetPaxDbContext : DbContext
                 attention.Property(a => a.Observations)
                     .HasMaxLength(2000);
 
-                attention.OwnsMany(a => a.Indicators, indicator =>
-                {
-                    indicator.ToTable("clinical_indicators");
+                attention.OwnsMany(
+                    a => a.Indicators,
+                    indicator =>
+                    {
+                        indicator.ToTable("clinical_indicators");
 
-                    indicator.WithOwner()
-                        .HasForeignKey("AttentionId");
+                        indicator.WithOwner()
+                            .HasForeignKey("AttentionId");
 
-                    indicator.Property<AttentionId>("AttentionId")
-                        .HasConversion(
-                            id => id.Value,
-                            value => new AttentionId(value));
+                        indicator.Property<AttentionId>(
+                                "AttentionId")
+                            .HasConversion(
+                                id => id.Value,
+                                value => new AttentionId(value));
 
-                    indicator.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd();
+                        indicator.Property<Guid>("Id")
+                            .ValueGeneratedOnAdd();
 
-                    indicator.HasKey("Id");
+                        indicator.HasKey("Id");
 
-                    indicator.Property(i => i.Name)
-                        .HasMaxLength(100)
-                        .IsRequired();
+                        indicator.Property(i => i.Name)
+                            .HasMaxLength(100)
+                            .IsRequired();
 
-                    indicator.Property(i => i.Value)
-                        .HasPrecision(18, 4);
+                        indicator.Property(i => i.Value)
+                            .HasPrecision(18, 4);
 
-                    indicator.Property(i => i.Unit)
-                        .HasMaxLength(30)
-                        .IsRequired();
-                });
+                        indicator.Property(i => i.Unit)
+                            .HasMaxLength(30)
+                            .IsRequired();
+                    });
 
                 attention.Navigation(a => a.Indicators)
                     .HasField("_indicators")
-                    .UsePropertyAccessMode(PropertyAccessMode.Field);
+                    .UsePropertyAccessMode(
+                        PropertyAccessMode.Field);
             });
 
             record.Navigation(r => r.Attentions)
                 .HasField("_attentions")
-                .UsePropertyAccessMode(PropertyAccessMode.Field);
+                .UsePropertyAccessMode(
+                    PropertyAccessMode.Field);
         });
+
+        // ClinicManagement
         modelBuilder.ConfigureClinicManagement();
-        
+
+        // Pet / Clinic links
         modelBuilder.Entity<PetClinicLinkRow>(entity =>
         {
             entity.ToTable("pet_clinic_links");
@@ -226,8 +240,8 @@ public sealed class VetPaxDbContext : DbContext
                 .HasColumnName("linked_at")
                 .HasColumnType("datetime(6)");
         });
-        modelBuilder.ConfigureAppointmentManagement();
 
+        // AppointmentManagement
+        modelBuilder.ConfigureAppointmentManagement();
     }
-    
 }

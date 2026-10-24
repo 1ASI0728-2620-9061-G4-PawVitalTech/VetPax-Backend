@@ -38,9 +38,11 @@ public sealed class AdherenceRecognitionRow
     public DateTime? LockedUntilUtc { get; set; }
 }
 
+
 public sealed class AdherenceOutboxRow
 {
     public Guid EventId { get; set; }
+
     public string EventType { get; set; } = string.Empty;
     public string PayloadJson { get; set; } = string.Empty;
 
@@ -48,4 +50,12 @@ public sealed class AdherenceOutboxRow
     public DateTime? PublishedAtUtc { get; set; }
 
     public int AttemptCount { get; set; }
+
+    // New processing properties
+    public DateTime? NextAttemptAtUtc { get; set; }
+
+    public Guid? LeaseToken { get; set; }
+    public DateTime? LockedUntilUtc { get; set; }
+
+    public string? LastError { get; set; }
 }

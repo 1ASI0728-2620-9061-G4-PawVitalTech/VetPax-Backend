@@ -10,6 +10,7 @@ using VetPax.Domain.Modules.AdherenceGamification.ValueObjects;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Notifications;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Repositories;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Processing;
 
 namespace VetPax.Infrastructure.Modules.AdherenceGamification;
 
@@ -75,6 +76,7 @@ public static class DependencyInjection
             RecognitionFirebaseGateway>();
 
         services.AddScoped<RecognitionNotificationProcessor>();
+        services.AddScoped<AdherenceOutboxProcessor>();
 
         return services;
     }
