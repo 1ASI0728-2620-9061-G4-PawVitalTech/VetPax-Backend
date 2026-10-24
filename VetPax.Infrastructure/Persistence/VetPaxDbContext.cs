@@ -5,6 +5,7 @@ using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Infrastructure.Modules.ClinicManagement.Persistence;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Persistence;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Persistence;
+using VetPax.Infrastructure.Modules.MedicationTreatment.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -48,7 +49,7 @@ public sealed class VetPaxDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-
+        modelBuilder.ApplyMedicationTreatmentModel();
         modelBuilder.Entity<Pet>(pet =>
         {
             pet.ToTable("pets");

@@ -15,6 +15,7 @@ using VetPax.Infrastructure.Modules.PetClinicalCare;
 using VetPax.Infrastructure.Modules.AppointmentManagement;
 using VetPax.Api.HostedServices;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
+using VetPax.Infrastructure.Modules.MedicationTreatment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +55,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<RegisterPetHandler>();
 builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
-
+builder.Services.AddMedicationTreatmentInfrastructure();
 
 builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
