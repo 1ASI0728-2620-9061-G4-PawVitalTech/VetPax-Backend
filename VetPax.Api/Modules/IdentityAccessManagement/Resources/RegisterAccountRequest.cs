@@ -1,6 +1,11 @@
-﻿namespace VetPax.Api.Modules.IdentityAccessManagement.Resources;
+﻿using System.ComponentModel.DataAnnotations;
 
-public class RegisterAccountRequest
-{
-    
-}
+namespace VetPax.Api.Modules.IdentityAccessManagement.Resources;
+
+public sealed record RegisterAccountRequest(
+    [property: Required]
+    [property: EmailAddress]
+    string Email,
+
+    [property: Required]
+    string Password);

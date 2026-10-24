@@ -1,0 +1,12 @@
+﻿
+# Local Docker secrets
+.env
+
+# Keycloak realm exports may contain sensitive data
+import/
+
+# Local backups
+backup/
+
+# Logs
+*.log

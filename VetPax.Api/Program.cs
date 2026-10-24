@@ -28,7 +28,7 @@ using VetPax.Infrastructure.Modules.AdherenceGamification;
 using VetPax.Infrastructure.Messaging;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
 using VetPax.Application.Common.Ports;
-
+using VetPax.Api.Modules.IdentityAccessManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,10 +100,13 @@ builder.Services.AddHostedService<
 
 
 // Keycloak and JWT authentication
+
 builder.Services.AddIamInfrastructure(
     builder.Configuration,
-    builder.Environment
-);
+    builder.Environment);
+
+builder.Services.AddIamApi();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<
@@ -161,6 +164,11 @@ if (app.Environment.IsDevelopment())
 
 // HTTP pipeline
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+// Required for the registration rate-limit policy.
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

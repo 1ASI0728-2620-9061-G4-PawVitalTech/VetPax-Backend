@@ -1,6 +1,4 @@
 ﻿namespace VetPax.Api.Modules.IdentityAccessManagement.Resources;
 
-public class PermissionResponses
-{
-    
-}
+public sealed record MyPermissionsResponse(
+    IReadOnlyList<string> Permissions);
