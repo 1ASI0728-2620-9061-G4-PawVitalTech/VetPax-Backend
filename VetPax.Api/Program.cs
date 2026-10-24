@@ -18,6 +18,9 @@ using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
 using VetPax.Infrastructure.Modules.MedicationTreatment;
 using VetPax.Api.Modules.MedicationTreatment.BackgroundServices;
 using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
+using VetPax.Api.Modules.NutritionManagement.Adapters;
+using VetPax.Application.Modules.NutritionManagement.Ports;
+using VetPax.Infrastructure.Modules.NutritionManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +93,13 @@ builder.Services.AddIamInfrastructure(
     builder.Configuration,
     builder.Environment
 );
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<
+    INutritionIdentityPort,
+    NutritionHttpIdentityAdapter>();
+
+builder.Services.AddNutritionManagementInfrastructure();
 
 var app = builder.Build();
 

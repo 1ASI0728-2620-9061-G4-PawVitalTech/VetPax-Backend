@@ -6,6 +6,7 @@ using VetPax.Infrastructure.Modules.ClinicManagement.Persistence;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Persistence;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Persistence;
 using VetPax.Infrastructure.Modules.MedicationTreatment.Persistence;
+using VetPax.Infrastructure.Modules.NutritionManagement.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -50,6 +51,7 @@ public sealed class VetPaxDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyMedicationTreatmentModel();
+        modelBuilder.ApplyNutritionManagementModel();
         modelBuilder.Entity<Pet>(pet =>
         {
             pet.ToTable("pets");
