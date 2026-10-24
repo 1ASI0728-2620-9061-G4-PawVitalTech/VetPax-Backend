@@ -16,6 +16,7 @@ using VetPax.Infrastructure.Modules.AppointmentManagement;
 using VetPax.Api.HostedServices;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
 using VetPax.Infrastructure.Modules.MedicationTreatment;
+using VetPax.Api.Modules.MedicationTreatment.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -66,6 +67,9 @@ builder.Services.AddAppointmentManagementInfrastructure();
 builder.Services.AddScoped<AppointmentOutboxProcessor>();
 
 builder.Services.AddScoped<AppointmentReminderProcessor>();
+
+builder.Services.AddMedicationBackgroundServices(
+    builder.Configuration);
 
 builder.Services.AddHttpClient<
     IAppointmentReminderSender,
