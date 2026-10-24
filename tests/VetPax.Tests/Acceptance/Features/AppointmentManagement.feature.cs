@@ -117,7 +117,7 @@ namespace VetPax.Tests.Acceptance.Features
         
         private static global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages InitializeCucumberMessages()
         {
-            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Acceptance/Features/AppointmentManagement.feature.ndjson", 15);
+            return new global::Reqnroll.Formatters.RuntimeSupport.FeatureLevelCucumberMessages("Acceptance/Features/AppointmentManagement.feature.ndjson", 16);
         }
         
         [global::NUnit.Framework.TestAttribute()]
@@ -565,16 +565,16 @@ namespace VetPax.Tests.Acceptance.Features
         }
         
         [global::NUnit.Framework.TestAttribute()]
-        [global::NUnit.Framework.DescriptionAttribute("US06 - Veterinario confirma una cita con atención verificada")]
-        public async global::System.Threading.Tasks.Task US06_VeterinarioConfirmaUnaCitaConAtencionVerificada()
+        [global::NUnit.Framework.DescriptionAttribute("US06 - Veterinario confirma una cita con atención registrada mediante US03")]
+        public async global::System.Threading.Tasks.Task US06_VeterinarioConfirmaUnaCitaConAtencionRegistradaMedianteUS03()
         {
             string[] tagsOfScenario = ((string[])(null));
             global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
             string pickleIndex = "12";
-            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("US06 - Veterinario confirma una cita con atención verificada", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("US06 - Veterinario confirma una cita con atención registrada mediante US03", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
             string[] tagsOfRule = ((string[])(null));
             global::Reqnroll.RuleInfo ruleInfo = null;
-#line 76
+#line 77
   this.ScenarioInitialize(scenarioInfo, ruleInfo);
 #line hidden
             if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
@@ -587,20 +587,53 @@ namespace VetPax.Tests.Acceptance.Features
 #line 9
   await this.FeatureBackgroundAsync();
 #line hidden
-#line 77
+#line 78
     await testRunner.GivenAsync("que existe una cita pendiente a las 09:00", ((string)(null)), ((global::Reqnroll.Table)(null)), "Dado ");
 #line hidden
-#line 78
-    await testRunner.AndAsync("existe una atención clínica vinculada como dato de prueba", ((string)(null)), ((global::Reqnroll.Table)(null)), "Y ");
-#line hidden
 #line 79
-    await testRunner.WhenAsync("el veterinario marca la cita como atendida", ((string)(null)), ((global::Reqnroll.Table)(null)), "Cuando ");
+    await testRunner.AndAsync("existe una atención clínica vinculada mediante US03", ((string)(null)), ((global::Reqnroll.Table)(null)), "Y ");
 #line hidden
 #line 80
-    await testRunner.ThenAsync("el código HTTP de citas es 200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Entonces ");
+    await testRunner.WhenAsync("el veterinario marca la cita como atendida", ((string)(null)), ((global::Reqnroll.Table)(null)), "Cuando ");
 #line hidden
 #line 81
+    await testRunner.ThenAsync("el código HTTP de citas es 200", ((string)(null)), ((global::Reqnroll.Table)(null)), "Entonces ");
+#line hidden
+#line 82
     await testRunner.AndAsync("la respuesta de cita tiene estado Attended", ((string)(null)), ((global::Reqnroll.Table)(null)), "Y ");
+#line hidden
+            }
+            await this.ScenarioCleanupAsync();
+        }
+        
+        [global::NUnit.Framework.TestAttribute()]
+        [global::NUnit.Framework.DescriptionAttribute("US03 - No se puede vincular una atención a una cita inexistente")]
+        public async global::System.Threading.Tasks.Task US03_NoSePuedeVincularUnaAtencionAUnaCitaInexistente()
+        {
+            string[] tagsOfScenario = ((string[])(null));
+            global::System.Collections.Specialized.OrderedDictionary argumentsOfScenario = new global::System.Collections.Specialized.OrderedDictionary();
+            string pickleIndex = "13";
+            global::Reqnroll.ScenarioInfo scenarioInfo = new global::Reqnroll.ScenarioInfo("US03 - No se puede vincular una atención a una cita inexistente", null, tagsOfScenario, argumentsOfScenario, featureTags, pickleIndex);
+            string[] tagsOfRule = ((string[])(null));
+            global::Reqnroll.RuleInfo ruleInfo = null;
+#line 84
+  this.ScenarioInitialize(scenarioInfo, ruleInfo);
+#line hidden
+            if ((global::Reqnroll.TagHelper.ContainsIgnoreTag(scenarioInfo.CombinedTags) || global::Reqnroll.TagHelper.ContainsIgnoreTag(featureTags)))
+            {
+                await testRunner.SkipScenarioAsync();
+            }
+            else
+            {
+                await this.ScenarioStartAsync();
+#line 9
+  await this.FeatureBackgroundAsync();
+#line hidden
+#line 85
+    await testRunner.WhenAsync("el veterinario intenta registrar una atención para una cita inexistente", ((string)(null)), ((global::Reqnroll.Table)(null)), "Cuando ");
+#line hidden
+#line 86
+    await testRunner.ThenAsync("el código HTTP de citas es 404", ((string)(null)), ((global::Reqnroll.Table)(null)), "Entonces ");
 #line hidden
             }
             await this.ScenarioCleanupAsync();

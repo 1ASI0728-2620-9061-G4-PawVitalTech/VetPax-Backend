@@ -73,9 +73,15 @@ Característica: US04 US05 US06 - Gestión de citas veterinarias
     Cuando el veterinario intenta marcar la cita sin atención vinculada
     Entonces el código HTTP de citas es 403
 
-  Escenario: US06 - Veterinario confirma una cita con atención verificada
+
+  Escenario: US06 - Veterinario confirma una cita con atención registrada mediante US03
     Dado que existe una cita pendiente a las 09:00
-    Y existe una atención clínica vinculada como dato de prueba
+    Y existe una atención clínica vinculada mediante US03
     Cuando el veterinario marca la cita como atendida
     Entonces el código HTTP de citas es 200
     Y la respuesta de cita tiene estado Attended
+
+  Escenario: US03 - No se puede vincular una atención a una cita inexistente
+    Cuando el veterinario intenta registrar una atención para una cita inexistente
+    Entonces el código HTTP de citas es 404
+

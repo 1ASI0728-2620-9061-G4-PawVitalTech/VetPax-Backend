@@ -12,6 +12,7 @@ using VetPax.Application.Modules.AppointmentManagement.UseCases.ScheduleAppointm
 using VetPax.Domain.Modules.AppointmentManagement.Repositories;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Adapters;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Repositories;
+using VetPax.Application.Modules.PetClinicalCare.Ports;
 
 namespace VetPax.Infrastructure.Modules.AppointmentManagement;
 
@@ -52,6 +53,10 @@ public static class DependencyInjection
         services.AddScoped<MarkAppointmentAttendedHandler>();
         services.AddScoped<GetVeterinarianAgendaHandler>();
         services.AddScoped<GetAppointmentHandler>();
+        
+        services.AddScoped<
+            IClinicalAppointmentLinkPort,
+            ClinicalAppointmentLinkAdapter>();
 
         return services;
     }

@@ -13,6 +13,8 @@ using VetPax.Infrastructure.Persistence;
 using VetPax.Infrastructure.Modules.ClinicManagement;
 using VetPax.Infrastructure.Modules.PetClinicalCare;
 using VetPax.Infrastructure.Modules.AppointmentManagement;
+using VetPax.Api.HostedServices;
+using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +61,21 @@ builder.Services.AddPetClinicalCare();
 builder.Services.AddClinicManagementInfrastructure();
 builder.Services.AddPetClinicLinks();
 builder.Services.AddAppointmentManagementInfrastructure();
+
+builder.Services.AddScoped<AppointmentOutboxProcessor>();
+
+builder.Services.AddScoped<AppointmentReminderProcessor>();
+
+builder.Services.AddHttpClient<
+    IAppointmentReminderSender,
+    AppointmentReminderWebhookSender>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHostedService<
+    AppointmentDeliveryHostedService>();
+
 
 // Keycloak and JWT authentication
 builder.Services.AddIamInfrastructure(

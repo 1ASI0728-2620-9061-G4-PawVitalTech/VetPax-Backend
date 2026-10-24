@@ -281,13 +281,15 @@ public sealed class AppointmentManagementSteps
             Guid.NewGuid());
     }
 
-    [Given("existe una atención clínica vinculada como dato de prueba")]
+    
+    [Given("existe una atención clínica vinculada mediante US03")]
     public async Task GivenLinkedClinicalAttention()
     {
-        // Registrar atención real mediante US03.
         await SendAsync(
             HttpMethod.Post,
-            $"/api/v1/pets/{_petId}/clinical-records?clinicId={_clinicId}",
+            $"/api/v1/pets/{_petId}/clinical-records" +
+            $"?clinicId={_clinicId}" +
+            $"&appointmentId={_appointmentId}",
             new
             {
                 attentionDate = DateTime.UtcNow,
@@ -310,30 +312,37 @@ public sealed class AppointmentManagementSteps
 
         await AssertStatusAsync(HttpStatusCode.Created);
 
-        using (var json = await ReadResponseAsync())
-        {
-            _clinicalAttentionId = json.RootElement
-                .GetProperty("attentionId")
-                .GetGuid();
-        }
+        using var json = await ReadResponseAsync();
 
-        // Asociación preparada exclusivamente para BDD.
-        // La integración automática con US03 es posterior.
-        using var scope = _factory.Services.CreateScope();
+        _clinicalAttentionId = json.RootElement
+            .GetProperty("attentionId")
+            .GetGuid();
 
-        var db = scope.ServiceProvider
-            .GetRequiredService<VetPaxDbContext>();
-
-        db.AppointmentAttentionLinks.Add(
-            new AppointmentAttentionLinkRow
-            {
-                AppointmentId = _appointmentId,
-                ClinicalAttentionId = _clinicalAttentionId,
-                LinkedAtUtc = DateTime.UtcNow
-            });
-
-        await db.SaveChangesAsync();
+        // No se inserta ningún vínculo manual.
+        // Debe haberlo creado el flujo productivo de US03.
     }
+
+    [When("el veterinario intenta registrar una atención para una cita inexistente")]
+    public Task WhenRegisterAttentionForMissingAppointment()
+    {
+        return SendAsync(
+            HttpMethod.Post,
+            $"/api/v1/pets/{_petId}/clinical-records" +
+            $"?clinicId={_clinicId}" +
+            $"&appointmentId={Guid.NewGuid()}",
+            new
+            {
+                attentionDate = DateTime.UtcNow,
+                reason = "Control veterinario",
+                diagnosis = "Paciente estable",
+                treatmentSummary = "Seguimiento",
+                observations = "Sin incidencias",
+                indicators = Array.Empty<object>()
+            },
+            _veterinarianId,
+            "veterinarian");
+    }
+
 
     [When("el veterinario marca la cita como atendida")]
     public Task WhenVeterinarianMarksAttended()
