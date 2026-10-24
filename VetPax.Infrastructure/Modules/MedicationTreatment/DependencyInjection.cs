@@ -1,7 +1,7 @@
 ﻿
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-
+using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
 using VetPax.Application.Modules.MedicationTreatment.Ports;
 using VetPax.Application.Modules.MedicationTreatment.Services;
 
@@ -138,6 +138,15 @@ public static class DependencyInjection
         // adapter is implemented in TS06.
         //
         // Do not register a fake notification sender.
+
+        
+        // Sender real implementado mediante Firebase
+        services.AddScoped<
+            IMedicationNotificationSender,
+            MedicationFirebaseNotificationSender>();
+
+        // Procesador de recordatorios
+        services.AddScoped<MedicationReminderProcessor>();
 
         return services;
     }

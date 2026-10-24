@@ -29,6 +29,10 @@ public static class MedicationModelBuilderExtensions
 
         modelBuilder.ApplyConfiguration(
             new MedicationOutboxConfiguration());
+        
+        modelBuilder.ApplyConfiguration(
+            new MedicationDeviceTokenConfiguration());
+
 
         return modelBuilder;
     }

@@ -414,6 +414,52 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("medication_administrations", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDeviceTokenRow", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("device_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("last_seen_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("platform");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("varchar(4096)")
+                        .HasColumnName("fcm_token");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("DeviceId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerId", "IsActive");
+
+                    b.ToTable("medication_device_tokens", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDoseRow", b =>
                 {
                     b.Property<Guid>("DoseId")
