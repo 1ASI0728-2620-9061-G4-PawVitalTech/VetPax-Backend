@@ -15,6 +15,9 @@ using VetPax.Infrastructure.Modules.PetClinicalCare;
 using VetPax.Infrastructure.Modules.AppointmentManagement;
 using VetPax.Api.HostedServices;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
+using VetPax.Infrastructure.Modules.MedicationTreatment;
+using VetPax.Api.Modules.MedicationTreatment.BackgroundServices;
+using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -54,7 +57,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<RegisterPetHandler>();
 builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
-
+builder.Services.AddMedicationTreatmentInfrastructure();
 
 builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
@@ -62,9 +65,14 @@ builder.Services.AddClinicManagementInfrastructure();
 builder.Services.AddPetClinicLinks();
 builder.Services.AddAppointmentManagementInfrastructure();
 
+builder.Services.AddMedicationFirebase(builder.Configuration);
+
 builder.Services.AddScoped<AppointmentOutboxProcessor>();
 
 builder.Services.AddScoped<AppointmentReminderProcessor>();
+
+builder.Services.AddMedicationBackgroundServices(
+    builder.Configuration);
 
 builder.Services.AddHttpClient<
     IAppointmentReminderSender,
