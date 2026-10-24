@@ -7,6 +7,8 @@ using VetPax.Infrastructure.Modules.PetClinicalCare.Persistence;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Persistence;
 using VetPax.Infrastructure.Modules.MedicationTreatment.Persistence;
 using VetPax.Infrastructure.Modules.NutritionManagement.Persistence;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Persistence;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Persistence;
 
 namespace VetPax.Infrastructure.Persistence;
 
@@ -52,6 +54,8 @@ public sealed class VetPaxDbContext : DbContext
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyMedicationTreatmentModel();
         modelBuilder.ApplyNutritionManagementModel();
+        modelBuilder.ApplyAdherenceGamificationModel();
+        modelBuilder.ApplyAdherenceGamificationModel();
         modelBuilder.Entity<Pet>(pet =>
         {
             pet.ToTable("pets");

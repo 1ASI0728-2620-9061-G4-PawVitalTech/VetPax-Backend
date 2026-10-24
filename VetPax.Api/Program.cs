@@ -22,6 +22,10 @@ using VetPax.Api.Modules.NutritionManagement.Adapters;
 using VetPax.Application.Modules.NutritionManagement.Ports;
 using VetPax.Infrastructure.Modules.NutritionManagement;
 using VetPax.Api.Modules.NutritionManagement.BackgroundServices;
+using VetPax.Api.Modules.AdherenceGamification.Adapters;
+using VetPax.Api.Modules.AdherenceGamification.BackgroundServices;
+using VetPax.Application.Modules.AdherenceGamification.Ports;
+using VetPax.Infrastructure.Modules.AdherenceGamification;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -104,6 +108,19 @@ builder.Services.AddScoped<
     NutritionHttpIdentityAdapter>();
 
 builder.Services.AddNutritionManagementInfrastructure();
+
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<
+    IAdherenceCurrentOwner,
+    HttpAdherenceCurrentOwner>();
+
+builder.Services.AddAdherenceGamificationInfrastructure(
+    builder.Configuration);
+
+builder.Services.AddHostedService<AdherenceRecognitionWorker>();
+
 
 var app = builder.Build();
 
