@@ -82,6 +82,13 @@ public sealed class GenerateFeedingRemindersHandler
 
                     if (!scheduledAtUtc.HasValue)
                         continue;
+                    
+                    if (scheduledAtUtc.Value <=
+                        _clock.GetUtcNow().UtcDateTime)
+                    {
+                        continue;
+                    }
+
 
                     var occurrence = new FeedingReminderOccurrence(
                         plan.PlanId.Value,

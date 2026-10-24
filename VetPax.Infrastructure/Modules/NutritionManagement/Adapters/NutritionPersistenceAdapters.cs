@@ -133,29 +133,43 @@ public sealed class NutritionReminderAdapter : INutritionReminderPort
         return true;
     }
 
+    
     public async Task CancelPendingForPlanAsync(
         Guid planId,
         CancellationToken cancellationToken = default)
     {
-        // Include records newly staged in this DbContext.
-        foreach (var row in _db.Set<FeedingReminderRow>().Local)
+        var cancelable = new[]
         {
-            if (row.PlanId == planId &&
-                row.Status == "Pending")
-            {
-                row.Status = "Cancelled";
-            }
-        }
+            "Pending",
+            "Retry",
+            "Processing"
+        };
 
-        var persisted = await _db.Set<FeedingReminderRow>()
+        // Include rows newly staged in this DbContext.
+        var localRows = _db.Set<FeedingReminderRow>()
+            .Local
             .Where(x =>
                 x.PlanId == planId &&
-                x.Status == "Pending")
+                cancelable.Contains(x.Status))
+            .ToArray();
+
+        var persistedRows = await _db.Set<FeedingReminderRow>()
+            .Where(x =>
+                x.PlanId == planId &&
+                cancelable.Contains(x.Status))
             .ToListAsync(cancellationToken);
 
-        foreach (var row in persisted)
-            row.Status = "Cancelled";
+        foreach (var reminder in localRows.Concat(persistedRows)
+                     .Distinct())
+        {
+            reminder.Status = "Cancelled";
+            reminder.LeaseId = null;
+            reminder.LockedUntilUtc = null;
+            reminder.NextAttemptAtUtc = null;
+            reminder.ProcessedAtUtc = DateTime.UtcNow;
+        }
     }
+
 }
 
 public sealed class NutritionReminderCandidatesAdapter

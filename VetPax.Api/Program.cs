@@ -21,6 +21,7 @@ using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
 using VetPax.Api.Modules.NutritionManagement.Adapters;
 using VetPax.Application.Modules.NutritionManagement.Ports;
 using VetPax.Infrastructure.Modules.NutritionManagement;
+using VetPax.Api.Modules.NutritionManagement.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,6 +70,9 @@ builder.Services.AddPetClinicLinks();
 builder.Services.AddAppointmentManagementInfrastructure();
 
 builder.Services.AddMedicationFirebase(builder.Configuration);
+
+builder.Services.AddNutritionReminderWorker(
+    builder.Configuration);
 
 builder.Services.AddScoped<AppointmentOutboxProcessor>();
 

@@ -254,6 +254,33 @@ public static class NutritionModelBuilderExtensions
                 .WithMany()
                 .HasForeignKey(x => x.PlanId)
                 .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.Property(x => x.AttemptCount)
+                .HasColumnName("attempt_count")
+                .HasDefaultValue(0);
+
+            entity.Property(x => x.NextAttemptAtUtc)
+                .HasColumnName("next_attempt_at_utc")
+                .HasColumnType("datetime(6)");
+
+            entity.Property(x => x.LeaseId)
+                .HasColumnName("lease_id");
+
+            entity.Property(x => x.LockedUntilUtc)
+                .HasColumnName("locked_until_utc")
+                .HasColumnType("datetime(6)");
+
+            entity.Property(x => x.LastError)
+                .HasColumnName("last_error")
+                .HasMaxLength(250);
+
+            entity.HasIndex(x => new
+            {
+                x.Status,
+                x.NextAttemptAtUtc,
+                x.LockedUntilUtc
+            });
+
         });
 
         modelBuilder.Entity<FeedingOutboxRow>(entity =>

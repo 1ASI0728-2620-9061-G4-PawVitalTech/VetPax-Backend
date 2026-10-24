@@ -989,13 +989,36 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("reminder_id");
 
+                    b.Property<int>("AttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempt_count");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("created_at_utc");
 
+                    b.Property<string>("LastError")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_id");
+
                     b.Property<DateOnly>("LocalDate")
                         .HasColumnType("date")
                         .HasColumnName("local_date");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
 
                     b.Property<Guid>("PetId")
                         .HasColumnType("char(36)")
@@ -1030,6 +1053,8 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.HasKey("ReminderId");
 
                     b.HasIndex("Status", "ScheduledAtUtc");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc", "LockedUntilUtc");
 
                     b.HasIndex("PlanId", "PlanVersion", "ScheduleId", "LocalDate")
                         .IsUnique();

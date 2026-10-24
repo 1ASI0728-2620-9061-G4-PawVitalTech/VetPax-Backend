@@ -76,6 +76,17 @@ public sealed class FeedingReminderRow
     public string Status { get; set; } = "Pending";
     public DateTime CreatedAtUtc { get; set; }
     public DateTime? ProcessedAtUtc { get; set; }
+    
+    public int AttemptCount { get; set; }
+
+    public DateTime? NextAttemptAtUtc { get; set; }
+
+    public Guid? LeaseId { get; set; }
+
+    public DateTime? LockedUntilUtc { get; set; }
+
+    public string? LastError { get; set; }
+
 }
 
 public sealed class FeedingOutboxRow
