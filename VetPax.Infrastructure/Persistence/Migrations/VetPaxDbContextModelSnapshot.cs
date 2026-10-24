@@ -80,6 +80,204 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("pets", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<Guid>("ClinicalAttentionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinical_attention_id");
+
+                    b.Property<DateTime>("LinkedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("linked_at_utc");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("ClinicalAttentionId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appointment_attention_links_attention");
+
+                    b.ToTable("appointment_attention_links", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTime>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc")
+                        .HasDatabaseName("ix_appointment_outbox_pending");
+
+                    b.ToTable("appointment_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<DateTime>("DueAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("due_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("Status", "DueAtUtc")
+                        .HasDatabaseName("ix_appointment_reminders_due");
+
+                    b.ToTable("appointment_reminders", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<TimeOnly?>("ActiveSlotTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("time(6)")
+                        .HasColumnName("active_slot_time")
+                        .HasComputedColumnSql("CASE WHEN `status` IN ('Pending', 'Attended') THEN `start_time` ELSE NULL END", true);
+
+                    b.Property<DateOnly>("AppointmentDate")
+                        .HasColumnType("date")
+                        .HasColumnName("appointment_date");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid?>("ClinicalAttentionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinical_attention_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("end_time");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_appointments_owner");
+
+                    b.HasIndex("ClinicId", "AppointmentDate")
+                        .HasDatabaseName("ix_appointments_clinic_date");
+
+                    b.HasIndex("VeterinarianId", "AppointmentDate", "ActiveSlotTime")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appointments_vet_active_slot");
+
+                    b.HasIndex("VeterinarianId", "AppointmentDate", "StartTime")
+                        .HasDatabaseName("ix_appointments_vet_agenda");
+
+                    b.ToTable("appointments", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>
                 {
                     b.Property<Guid>("ClinicId")
@@ -291,6 +489,24 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Attentions");
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", null)
+                        .WithOne()
+                        .HasForeignKey("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", null)
+                        .WithOne()
+                        .HasForeignKey("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>

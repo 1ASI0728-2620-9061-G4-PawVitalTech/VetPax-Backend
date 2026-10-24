@@ -1,11 +1,14 @@
 ﻿
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 using VetPax.Api.Modules.PetClinicalCare.Resources;
 using VetPax.Application.Modules.IdentityAccessManagement.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterClinicalAttention;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
+using VetPax.Application.Modules.PetClinicalCare.Ports;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
@@ -58,13 +61,11 @@ public sealed class ClinicalRecordsController : ControllerBase
         {
             var query = new GetClinicalHistoryQuery(
                 new PetId(petId),
-                new OwnerId(identity.UserId.Value)
-            );
+                new OwnerId(identity.UserId.Value));
 
             var result = await _handler.HandleAsync(
                 query,
-                cancellationToken
-            );
+                cancellationToken);
 
             if (result is null)
             {
@@ -102,17 +103,21 @@ public sealed class ClinicalRecordsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterAttention(
         Guid petId,
         [FromQuery] Guid clinicId,
+        [FromQuery] Guid? appointmentId,
         [FromBody] RegisterClinicalAttentionRequest request,
         CancellationToken cancellationToken)
     {
-        if (petId == Guid.Empty || clinicId == Guid.Empty)
+        if (petId == Guid.Empty || clinicId == Guid.Empty ||
+            (appointmentId.HasValue &&
+             appointmentId.Value == Guid.Empty))
         {
             return BadRequest(new
             {
-                message = "Valid pet and clinic IDs are required."
+                message = "Valid pet, clinic and appointment IDs are required."
             });
         }
 
@@ -127,8 +132,7 @@ public sealed class ClinicalRecordsController : ControllerBase
             var requester = new AccessRequester(
                 identity.UserId.Value,
                 RequesterRole.Veterinarian,
-                new ClinicId(clinicId)
-            );
+                new ClinicId(clinicId));
 
             var command = new RegisterClinicalAttentionCommand(
                 new PetId(petId),
@@ -142,33 +146,29 @@ public sealed class ClinicalRecordsController : ControllerBase
                     .Select(i => new ClinicalIndicatorInput(
                         i.Name,
                         i.Value,
-                        i.Unit
-                    ))
+                        i.Unit))
                     .ToArray()
             );
 
-            var result = await _registerHandler.HandleAsync(
-                command,
-                cancellationToken
-            );
-
-            var response = new RegisterClinicalAttentionResponse(
-                result.AttentionId,
-                result.ClinicalRecordId,
-                result.PetId
-            );
+            var result = appointmentId.HasValue
+                ? await _registerHandler.HandleForAppointmentAsync(
+                    command,
+                    appointmentId.Value,
+                    cancellationToken)
+                : await _registerHandler.HandleAsync(
+                    command,
+                    cancellationToken);
 
             return Created(
                 $"/api/v1/pets/{petId}/clinical-records",
-                response
-            );
+                new RegisterClinicalAttentionResponse(
+                    result.AttentionId,
+                    result.ClinicalRecordId,
+                    result.PetId));
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new
-            {
-                message = ex.Message
-            });
+            return NotFound(new { message = ex.Message });
         }
         catch (UnauthorizedAccessException)
         {
@@ -179,9 +179,21 @@ public sealed class ClinicalRecordsController : ControllerBase
         }
         catch (ArgumentException ex)
         {
-            return BadRequest(new
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (ClinicalAppointmentLinkConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException is MySqlException
             {
-                message = ex.Message
+                Number: 1062
+            })
+        {
+            return Conflict(new
+            {
+                message = "Appointment already has a linked attention."
             });
         }
     }
