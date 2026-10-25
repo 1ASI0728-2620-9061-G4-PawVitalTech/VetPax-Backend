@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 using VetPax.Api;
 using VetPax.Application.Common.Ports;
@@ -41,7 +44,43 @@ builder.Services.AddControllers()
         );
     });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/auth"),
+                TokenUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    ["openid"] = "OpenID",
+                    ["profile"] = "Profile",
+                    ["email"] = "Email"
+                }
+            }
+        }
+    };
+
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes["oidc"] = securityScheme;
+
+        var oidcRef = new OpenApiSecuritySchemeReference("oidc", document, "oidc");
+
+        document.Security ??= new List<OpenApiSecurityRequirement>();
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [oidcRef] = new List<string> { "openid", "profile", "email" }
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 // MySQL connection
 var connectionString = builder.Configuration
@@ -152,6 +191,9 @@ if (app.Environment.IsDevelopment())
             "/openapi/v1.json",
             "VetPax API v1"
         );
+        options.OAuthClientId("vetpax-swagger");
+        options.OAuthUsePkce();
+        options.OAuthScopes("openid", "profile", "email");
     });
 
     using var scope = app.Services.CreateScope();

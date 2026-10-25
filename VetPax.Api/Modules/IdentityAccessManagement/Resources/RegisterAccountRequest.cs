@@ -3,9 +3,21 @@
 namespace VetPax.Api.Modules.IdentityAccessManagement.Resources;
 
 public sealed record RegisterAccountRequest(
-    [property: Required]
-    [property: EmailAddress]
+    [param: Required(AllowEmptyStrings = false)]
+    [param: MinLength(2)]
+    [param: MaxLength(80)]
+    string FirstName,
+
+    [param: Required(AllowEmptyStrings = false)]
+    [param: MinLength(2)]
+    [param: MaxLength(80)]
+    string LastName,
+
+    [param: Required(AllowEmptyStrings = false)]
+    [param: EmailAddress]
     string Email,
 
-    [property: Required]
+    [param: Required(AllowEmptyStrings = false)]
+    [param: MinLength(8)]
+    [param: MaxLength(128)]
     string Password);

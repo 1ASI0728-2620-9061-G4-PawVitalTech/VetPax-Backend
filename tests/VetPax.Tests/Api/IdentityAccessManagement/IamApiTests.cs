@@ -80,6 +80,8 @@ public sealed class IamApiTests
         provisioning.RegisterOwnerAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
             .Returns(new ProvisionedIdentity(
                 userId,
@@ -93,6 +95,8 @@ public sealed class IamApiTests
 
         var result = await controller.RegisterAsync(
             new RegisterAccountRequest(
+                "Rafael",
+                "Perez",
                 "owner@example.com",
                 "ExamplePassword123!"),
             CancellationToken.None);
@@ -117,6 +121,8 @@ public sealed class IamApiTests
         provisioning.RegisterOwnerAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromException<ProvisionedIdentity>(
                 new InvalidOperationException(
@@ -131,6 +137,8 @@ public sealed class IamApiTests
 
         var result = await controller.RegisterAsync(
             new RegisterAccountRequest(
+                "Rafael",
+                "Perez",
                 "owner@example.com",
                 "ExamplePassword123!"),
             CancellationToken.None);

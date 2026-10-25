@@ -15,6 +15,8 @@ public sealed class KeycloakIdentityProvisioningAdapter(
 ) : IIdentityProvisioningPort
 {
     public async Task<ProvisionedIdentity> RegisterOwnerAsync(
+        string firstName,
+        string lastName,
         string email,
         string password,
         CancellationToken cancellationToken = default)
@@ -22,6 +24,10 @@ public sealed class KeycloakIdentityProvisioningAdapter(
         var config = options.Value;
         var adminUrl =
             $"{config.BaseUrl.TrimEnd('/')}/admin/realms/{config.Realm}";
+
+        var normalizedEmail = email.Trim();
+        var normalizedFirstName = firstName.Trim();
+        var normalizedLastName = lastName.Trim();
 
         using var tokenBody = new FormUrlEncodedContent(
             new Dictionary<string, string>
@@ -44,7 +50,6 @@ public sealed class KeycloakIdentityProvisioningAdapter(
         var token = tokenJson.RootElement
             .GetProperty("access_token").GetString()!;
 
-        // Obtain the owner role before creating the account
         using var roleRequest = new HttpRequestMessage(
             HttpMethod.Get, $"{adminUrl}/roles/owner");
 
@@ -68,8 +73,10 @@ public sealed class KeycloakIdentityProvisioningAdapter(
 
         createRequest.Content = JsonContent.Create(new
         {
-            username = email.Trim(),
-            email = email.Trim(),
+            username = normalizedEmail,
+            email = normalizedEmail,
+            firstName = normalizedFirstName,
+            lastName = normalizedLastName,
             enabled = true,
             emailVerified = false,
             credentials = new[]
@@ -120,7 +127,6 @@ public sealed class KeycloakIdentityProvisioningAdapter(
         }
         catch
         {
-            // Best-effort compensation if role assignment fails
             try
             {
                 using var deleteRequest = new HttpRequestMessage(
@@ -140,6 +146,6 @@ public sealed class KeycloakIdentityProvisioningAdapter(
             throw;
         }
 
-        return new ProvisionedIdentity(userId, email.Trim());
+        return new ProvisionedIdentity(userId, normalizedEmail);
     }
 }

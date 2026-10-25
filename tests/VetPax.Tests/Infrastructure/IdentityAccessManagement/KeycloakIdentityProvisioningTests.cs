@@ -41,6 +41,14 @@ public sealed class KeycloakIdentityProvisioningTests
                 if (path.EndsWith("/admin/realms/vetpax/users") &&
                     request.Method == HttpMethod.Post)
                 {
+                    var payload = request.Content is not null
+                        ? request.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+                        : string.Empty;
+
+                    Assert.Contains("\"firstName\":\"Rafael\"", payload);
+                    Assert.Contains("\"lastName\":\"Perez\"", payload);
+                    Assert.Contains("\"username\":\"owner@example.com\"", payload);
+
                     var response = new HttpResponseMessage(
                         HttpStatusCode.Created);
 
@@ -66,6 +74,8 @@ public sealed class KeycloakIdentityProvisioningTests
             CreateOptions());
 
         var result = await adapter.RegisterOwnerAsync(
+            "Rafael",
+            "Perez",
             "owner@example.com",
             "ExamplePassword123!");
 
@@ -79,6 +89,10 @@ public sealed class KeycloakIdentityProvisioningTests
         Assert.Contains(
             $"POST /admin/realms/vetpax/users/{userId}/role-mappings/realm",
             calls);
+
+        var createCall = calls
+            .First(call => call.StartsWith("POST /admin/realms/vetpax/users"));
+        Assert.Contains("POST /admin/realms/vetpax/users", createCall);
     }
 
     [Fact]
@@ -119,6 +133,8 @@ public sealed class KeycloakIdentityProvisioningTests
         var exception = await Assert.ThrowsAsync<
             InvalidOperationException>(() =>
                 adapter.RegisterOwnerAsync(
+                    "Rafael",
+                    "Perez",
                     "existing@example.com",
                     "ExamplePassword123!"));
 

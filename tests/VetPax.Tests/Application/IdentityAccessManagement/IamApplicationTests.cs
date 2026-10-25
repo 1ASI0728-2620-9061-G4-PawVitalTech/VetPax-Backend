@@ -26,6 +26,8 @@ public sealed class IamApplicationTests
         var userId = Guid.NewGuid();
 
         provisioning.RegisterOwnerAsync(
+                "Rafael",
+                "Perez",
                 "owner@example.com",
                 "ExamplePassword123!",
                 Arg.Any<CancellationToken>())
@@ -39,6 +41,8 @@ public sealed class IamApplicationTests
 
         var result = await handler.HandleAsync(
             new RegisterAccountCommand(
+                "Rafael",
+                "Perez",
                 "owner@example.com",
                 "ExamplePassword123!"));
 
@@ -47,6 +51,8 @@ public sealed class IamApplicationTests
 
         await provisioning.Received(1)
             .RegisterOwnerAsync(
+                "Rafael",
+                "Perez",
                 "owner@example.com",
                 "ExamplePassword123!",
                 Arg.Any<CancellationToken>());
@@ -74,11 +80,15 @@ public sealed class IamApplicationTests
         await Assert.ThrowsAsync<ArgumentException>(() =>
             handler.HandleAsync(
                 new RegisterAccountCommand(
+                    "Rafael",
+                    "Perez",
                     "not-an-email",
                     "ExamplePassword123!")));
 
         await provisioning.DidNotReceive()
             .RegisterOwnerAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>());
@@ -97,11 +107,15 @@ public sealed class IamApplicationTests
         await Assert.ThrowsAsync<ArgumentException>(() =>
             handler.HandleAsync(
                 new RegisterAccountCommand(
+                    "Rafael",
+                    "Perez",
                     "owner@example.com",
                     "")));
 
         await provisioning.DidNotReceive()
             .RegisterOwnerAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<CancellationToken>());

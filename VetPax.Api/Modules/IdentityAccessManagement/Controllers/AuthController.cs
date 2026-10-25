@@ -51,6 +51,8 @@ public sealed class AuthController : ControllerBase
         try
         {
             var command = new RegisterAccountCommand(
+                request.FirstName,
+                request.LastName,
                 request.Email,
                 request.Password);
 
