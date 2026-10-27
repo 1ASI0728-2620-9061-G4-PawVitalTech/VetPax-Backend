@@ -8,6 +8,10 @@ public sealed record ClinicDirectoryItem(
     string? ContactEmail
 );
 
+public sealed record ClinicVeterinarianItem(
+    Guid VeterinarianId
+);
+
 public sealed record ClinicDirectoryPage(
     int Page,
     int PageSize,
@@ -21,4 +25,9 @@ public interface IClinicDirectoryPort
         int page,
         int pageSize,
         CancellationToken cancellationToken = default);
+    
+    Task<IReadOnlyList<ClinicVeterinarianItem>>
+        GetActiveVeterinariansAsync(
+            Guid clinicId,
+            CancellationToken cancellationToken = default);
 }

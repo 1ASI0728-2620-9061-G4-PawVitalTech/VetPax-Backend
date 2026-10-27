@@ -37,4 +37,22 @@ public sealed class ClinicDirectoryAdapter(
             totalCount,
             clinics);
     }
+    
+    public async Task<IReadOnlyList<ClinicVeterinarianItem>>
+        GetActiveVeterinariansAsync(
+            Guid clinicId,
+            CancellationToken cancellationToken = default)
+    {
+        var veterinarians = await db.ClinicVeterinarians
+            .AsNoTracking()
+            .Where(v =>
+                v.ClinicId == clinicId &&
+                v.IsActive)
+            .OrderBy(v => v.VeterinarianId)
+            .Select(v => new ClinicVeterinarianItem(
+                v.VeterinarianId))
+            .ToArrayAsync(cancellationToken);
+
+        return veterinarians;
+    }
 }

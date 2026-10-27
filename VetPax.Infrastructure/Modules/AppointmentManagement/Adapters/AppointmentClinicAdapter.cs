@@ -34,6 +34,23 @@ public sealed class AppointmentClinicAdapter
                      x.IsActive,
                 cancellationToken);
     }
+    public async Task<IReadOnlyList<AppointmentOpeningInterval>>
+        GetOpeningIntervalsAsync(
+            Guid clinicId,
+            DayOfWeek dayOfWeek,
+            CancellationToken cancellationToken = default)
+    {
+        return await _db.ClinicOpeningHours
+            .AsNoTracking()
+            .Where(h =>
+                h.ClinicId == clinicId &&
+                h.DayOfWeek == dayOfWeek)
+            .OrderBy(h => h.OpenTime)
+            .Select(h => new AppointmentOpeningInterval(
+                h.OpenTime,
+                h.CloseTime))
+            .ToArrayAsync(cancellationToken);
+    }
 
     public async Task<bool> IsWithinOpeningHoursAsync(
         Guid clinicId,

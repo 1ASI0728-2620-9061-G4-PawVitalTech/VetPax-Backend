@@ -12,6 +12,7 @@ using VetPax.Application.Modules.AppointmentManagement.UseCases.MarkAppointmentA
 using VetPax.Application.Modules.AppointmentManagement.UseCases.RescheduleAppointment;
 using VetPax.Application.Modules.AppointmentManagement.UseCases.ScheduleAppointment;
 using VetPax.Domain.Modules.AppointmentManagement.Exceptions;
+using VetPax.Application.Modules.AppointmentManagement.UseCases.GetAvailableSlots;
 
 namespace VetPax.Api.Modules.AppointmentManagement.Controllers;
 
@@ -26,6 +27,7 @@ public sealed class AppointmentsController : ControllerBase
     private readonly MarkAppointmentAttendedHandler _attend;
     private readonly GetVeterinarianAgendaHandler _agenda;
     private readonly GetAppointmentHandler _get;
+    private readonly GetAvailableSlotsHandler _availability;
 
     public AppointmentsController(
         ScheduleAppointmentHandler schedule,
@@ -33,7 +35,8 @@ public sealed class AppointmentsController : ControllerBase
         CancelAppointmentHandler cancel,
         MarkAppointmentAttendedHandler attend,
         GetVeterinarianAgendaHandler agenda,
-        GetAppointmentHandler get)
+        GetAppointmentHandler get,
+        GetAvailableSlotsHandler availability)
     {
         _schedule = schedule;
         _reschedule = reschedule;
@@ -41,6 +44,7 @@ public sealed class AppointmentsController : ControllerBase
         _attend = attend;
         _agenda = agenda;
         _get = get;
+        _availability = availability;
     }
 
     // -------------------------------------------------
@@ -188,6 +192,32 @@ public sealed class AppointmentsController : ControllerBase
                             "reschedule or mark_attended."
                     });
             }
+        });
+    }
+    [HttpGet("availability")]
+    [Authorize(Roles = "owner")]
+    [ProducesResponseType(
+        typeof(AvailableSlotsData),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public Task<IActionResult> GetAvailability(
+        [FromQuery] Guid clinicId,
+        [FromQuery] Guid veterinarianId,
+        [FromQuery] DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(async () =>
+        {
+            var result = await _availability.HandleAsync(
+                new GetAvailableSlotsQuery(
+                    clinicId,
+                    veterinarianId,
+                    date),
+                cancellationToken);
+
+            return Ok(result);
         });
     }
 

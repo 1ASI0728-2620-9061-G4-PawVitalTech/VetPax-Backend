@@ -17,15 +17,19 @@ public sealed class ClinicsController : ControllerBase
     private readonly GetClinicProfileHandler _get;
     private readonly UpdateClinicProfileHandler _update;
     private readonly ListClinicsHandler _list;
+    private readonly ListClinicVeterinariansHandler _veterinarians;
+    
     
     public ClinicsController(
         GetClinicProfileHandler get,
         UpdateClinicProfileHandler update,
-        ListClinicsHandler list)
+        ListClinicsHandler list,
+        ListClinicVeterinariansHandler veterinarians)
     {
         _get = get;
         _update = update;
         _list = list;
+        _veterinarians = veterinarians;
     }
     
     [HttpGet]
@@ -51,6 +55,40 @@ public sealed class ClinicsController : ControllerBase
             return BadRequest(new
             {
                 message = ex.Message
+            });
+        }
+    }
+    
+    [HttpGet("{clinicId:guid}/veterinarians")]
+    [Authorize(
+        Roles = "owner,veterinarian,clinic_administrator")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ListVeterinarians(
+        Guid clinicId,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _veterinarians.HandleAsync(
+                clinicId,
+                cancellationToken);
+
+            return Ok(result);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
+            });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new
+            {
+                message = "Clinic not found."
             });
         }
     }

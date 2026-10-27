@@ -87,6 +87,8 @@ public static class DependencyInjection
             ClinicDirectoryAdapter>();
 
         services.AddScoped<ListClinicsHandler>();
+        
+        
 
         return services;
     }
