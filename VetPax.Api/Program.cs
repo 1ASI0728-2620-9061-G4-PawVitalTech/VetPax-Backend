@@ -68,9 +68,10 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
         document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
         document.Components.SecuritySchemes["oidc"] = securityScheme;
 
-        var oidcRef = new OpenApiSecuritySchemeReference("oidc", document, "oidc");
+        var oidcRef = new OpenApiSecuritySchemeReference("oidc", document);
 
         document.Security ??= new List<OpenApiSecurityRequirement>();
         document.Security.Add(new OpenApiSecurityRequirement
