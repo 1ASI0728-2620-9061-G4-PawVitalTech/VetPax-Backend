@@ -6,6 +6,7 @@ using VetPax.Application.Modules.IdentityAccessManagement.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.GetMyPets;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
@@ -17,15 +18,18 @@ public sealed class PetsController : ControllerBase
     private readonly RegisterPetHandler _registerPetHandler;
     private readonly GetPetHandler _getPetHandler;
     private readonly IAuthenticatedUserPort _currentUser;
+    private readonly GetMyPetsHandler _getMyPetsHandler;
 
     public PetsController(
         RegisterPetHandler registerPetHandler,
         GetPetHandler getPetHandler,
-        IAuthenticatedUserPort currentUser)
+        IAuthenticatedUserPort currentUser,
+        GetMyPetsHandler getMyPetsHandler)
     {
         _registerPetHandler = registerPetHandler;
         _getPetHandler = getPetHandler;
         _currentUser = currentUser;
+        _getMyPetsHandler = getMyPetsHandler;
     }
 
     [HttpPost]
@@ -78,6 +82,35 @@ public sealed class PetsController : ControllerBase
                 message = ex.Message
             });
         }
+    }
+    [HttpGet]
+    [ProducesResponseType(
+        typeof(IReadOnlyList<PetResponse>),
+        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetMine(
+        CancellationToken cancellationToken)
+    {
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null)
+            return Unauthorized();
+
+        var result = await _getMyPetsHandler.HandleAsync(
+            new OwnerId(identity.UserId.Value),
+            cancellationToken);
+
+        return Ok(result.Select(p => new PetResponse(
+            p.PetId.Value,
+            p.Name,
+            p.Species.ToString(),
+            p.BirthDate,
+            p.Breed,
+            p.Sex?.ToString(),
+            p.RegisteredAt
+        )).ToArray());
     }
 
     [HttpGet("{petId:guid}")]

@@ -5,12 +5,16 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using VetPax.Application.Modules.AdherenceGamification.Handlers;
 using VetPax.Application.Modules.AdherenceGamification.Ports;
 using VetPax.Application.Modules.AdherenceGamification.Services;
+using VetPax.Application.Modules.ClinicManagement.Ports;
 using VetPax.Domain.Modules.AdherenceGamification.Repositories;
 using VetPax.Domain.Modules.AdherenceGamification.ValueObjects;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Notifications;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Repositories;
 using VetPax.Infrastructure.Modules.AdherenceGamification.Processing;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.GetMyPets;
+using VetPax.Application.Modules.ClinicManagement.UseCases.ListClinics;
+using VetPax.Infrastructure.Modules.ClinicManagement.Adapters;
 
 namespace VetPax.Infrastructure.Modules.AdherenceGamification;
 
@@ -70,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IngestAdherenceEvidenceHandler>();
         services.AddScoped<GetMyAdherenceHandler>();
         services.AddScoped<AdherenceEvidenceConsumer>();
+        services.AddScoped<GetMyPetsHandler>();
 
         services.AddScoped<
             IRecognitionPushGateway,
@@ -77,6 +82,11 @@ public static class DependencyInjection
 
         services.AddScoped<RecognitionNotificationProcessor>();
         services.AddScoped<AdherenceOutboxProcessor>();
+        services.AddScoped<
+            IClinicDirectoryPort,
+            ClinicDirectoryAdapter>();
+
+        services.AddScoped<ListClinicsHandler>();
 
         return services;
     }
