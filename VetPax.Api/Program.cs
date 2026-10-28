@@ -1,17 +1,41 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
-using VetPax.Application.Common.Ports;
-using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
-using VetPax.Domain.Modules.PetClinicalCare.Repositories;
-using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
-using VetPax.Infrastructure.Persistence;
+using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 using VetPax.Api;
-using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
+using VetPax.Application.Common.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
+using VetPax.Domain.Modules.PetClinicalCare.Repositories;
+using VetPax.Infrastructure.Modules.IdentityAccessManagement;
+using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
+using VetPax.Infrastructure.Persistence;
+using VetPax.Infrastructure.Modules.ClinicManagement;
+using VetPax.Infrastructure.Modules.PetClinicalCare;
+using VetPax.Infrastructure.Modules.AppointmentManagement;
+using VetPax.Api.HostedServices;
+using VetPax.Infrastructure.Modules.AppointmentManagement.Processing;
+using VetPax.Infrastructure.Modules.MedicationTreatment;
+using VetPax.Api.Modules.MedicationTreatment.BackgroundServices;
+using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
+using VetPax.Api.Modules.NutritionManagement.Adapters;
+using VetPax.Application.Modules.NutritionManagement.Ports;
+using VetPax.Infrastructure.Modules.NutritionManagement;
+using VetPax.Api.Modules.NutritionManagement.BackgroundServices;
+using VetPax.Api.Modules.AdherenceGamification.Adapters;
+using VetPax.Api.Modules.AdherenceGamification.BackgroundServices;
+using VetPax.Application.Modules.AdherenceGamification.Ports;
+using VetPax.Infrastructure.Modules.AdherenceGamification;
+using VetPax.Infrastructure.Messaging;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
+using VetPax.Application.Common.Ports;
+using VetPax.Api.Modules.IdentityAccessManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+// Controllers and JSON configuration
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -20,15 +44,52 @@ builder.Services.AddControllers()
         );
     });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/auth"),
+                TokenUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    ["openid"] = "OpenID",
+                    ["profile"] = "Profile",
+                    ["email"] = "Email"
+                }
+            }
+        }
+    };
 
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["oidc"] = securityScheme;
+
+        var oidcRef = new OpenApiSecuritySchemeReference("oidc", document);
+
+        document.Security ??= new List<OpenApiSecurityRequirement>();
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [oidcRef] = new List<string> { "openid", "profile", "email" }
+        });
+
+        return Task.CompletedTask;
+    });
+});
+
+// MySQL connection
 var connectionString = builder.Configuration
-                           .GetConnectionString("VetPaxDb")
-                       ?? throw new InvalidOperationException(
-                           "VetPax database connection is not configured."
-                       );
+    .GetConnectionString("VetPaxDb")
+    ?? throw new InvalidOperationException(
+        "VetPax database connection is not configured."
+    );
 
-// Configure MySQL
 builder.Services.AddDbContext<VetPaxDbContext>(options =>
     options.UseMySql(
         connectionString,
@@ -36,22 +97,91 @@ builder.Services.AddDbContext<VetPaxDbContext>(options =>
     )
 );
 
-// Register repositories
+// PetClinicalCare dependency injection
 builder.Services.AddScoped<IPetRepository, PetRepository>();
+
 builder.Services.AddScoped<
     IClinicalRecordRepository,
     ClinicalRecordRepository>();
 
-// Register application services
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<RegisterPetHandler>();
 builder.Services.AddScoped<GetPetHandler>();
 builder.Services.AddScoped<GetClinicalHistoryHandler>();
+builder.Services.AddMedicationTreatmentInfrastructure();
+
+builder.Services.AddVeterinaryClinicalAuthorization();
 builder.Services.AddPetClinicalCare();
+builder.Services.AddClinicManagementInfrastructure();
+builder.Services.AddPetClinicLinks();
+builder.Services.AddAppointmentManagementInfrastructure();
+
+builder.Services.AddMedicationFirebase(builder.Configuration);
+
+builder.Services.AddNutritionReminderWorker(
+    builder.Configuration);
+
+builder.Services.AddScoped<AppointmentOutboxProcessor>();
+
+builder.Services.AddScoped<AppointmentReminderProcessor>();
+
+builder.Services.AddMedicationBackgroundServices(
+    builder.Configuration);
+
+builder.Services.AddHttpClient<
+    IAppointmentReminderSender,
+    AppointmentReminderWebhookSender>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
+
+builder.Services.AddHostedService<
+    AppointmentDeliveryHostedService>();
+
+
+// Keycloak and JWT authentication
+
+builder.Services.AddIamInfrastructure(
+    builder.Configuration,
+    builder.Environment);
+
+builder.Services.AddIamApi();
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<
+    INutritionIdentityPort,
+    NutritionHttpIdentityAdapter>();
+
+builder.Services.AddNutritionManagementInfrastructure();
+
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<
+    IAdherenceCurrentOwner,
+    HttpAdherenceCurrentOwner>();
+
+builder.Services.AddAdherenceGamificationInfrastructure(
+    builder.Configuration);
+
+builder.Services.AddHostedService<AdherenceRecognitionWorker>();
+
+
+// Preserve development logging.
+builder.Services.AddScoped<DevelopmentDomainEventPublisher>();
+
+// Route AppointmentManagement and MedicationTreatment
+// events to AdherenceGamification.
+builder.Services.AddScoped<
+    IDomainEventPublisher,
+    AdherenceDomainEventPublisher>();
+
+builder.Services.AddHostedService<AdherenceOutboxWorker>();
 
 var app = builder.Build();
 
-
+// Development configuration
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -62,19 +192,34 @@ if (app.Environment.IsDevelopment())
             "/openapi/v1.json",
             "VetPax API v1"
         );
+        options.OAuthClientId("vetpax-swagger");
+        options.OAuthUsePkce();
+        options.OAuthScopes("openid", "profile", "email");
     });
+
     using var scope = app.Services.CreateScope();
 
     var dbContext = scope.ServiceProvider
         .GetRequiredService<VetPaxDbContext>();
 
     await dbContext.Database.MigrateAsync();
-    // Keep your existing database migration code here
-    // if it is already configured.
 }
 
+// HTTP pipeline
+// HTTPS obligatorio fuera del entorno de desarrollo.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+app.UseRouting();
+
+// Required for the registration rate-limit policy.
+app.UseRateLimiter();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
 
 app.Run();

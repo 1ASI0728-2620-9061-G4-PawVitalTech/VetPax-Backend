@@ -34,35 +34,49 @@ public sealed class GetClinicalEvolutionHandler
 
         if (requester is null ||
             !requester.IsVeterinarian() ||
+            requester.UserId == Guid.Empty ||
             requester.ClinicId is not { } clinicId ||
             clinicId.Value == Guid.Empty)
         {
-            throw new UnauthorizedAccessException();
+            throw new UnauthorizedAccessException(
+                "Veterinarian authentication is required.");
         }
 
         var pet = await _pets.FindByIdAsync(
-            query.PetId, cancellationToken);
-
-        if (pet is null)
-            throw new KeyNotFoundException("Pet not found.");
-
-        var authorized = await _authorization.CanViewEvolutionAsync(
-            requester.UserId,
-            clinicId,
             query.PetId,
             cancellationToken);
 
+        if (pet is null)
+        {
+            throw new KeyNotFoundException(
+                "Pet not found.");
+        }
+
+        var authorized =
+            await _authorization.CanViewEvolutionAsync(
+                requester.UserId,
+                clinicId,
+                query.PetId,
+                cancellationToken);
+
         if (!authorized)
-            throw new UnauthorizedAccessException();
+        {
+            throw new UnauthorizedAccessException(
+                "Veterinarian is not authorized for this patient.");
+        }
 
         var record = await _records.FindByPetIdAsync(
-            query.PetId, cancellationToken);
+            query.PetId,
+            cancellationToken);
 
         if (record is null)
+        {
             throw new KeyNotFoundException(
                 "Clinical record not found.");
+        }
 
-        var evolution = _evolutionService.BuildEvolution(record);
+        var evolution = _evolutionService.BuildEvolution(
+            record);
 
         return new GetClinicalEvolutionResult(
             evolution.PetId.Value,

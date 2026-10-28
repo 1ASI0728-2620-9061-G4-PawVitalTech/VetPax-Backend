@@ -80,6 +80,1239 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("pets", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload_json");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc", "LockedUntilUtc");
+
+                    b.ToTable("adherence_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRecognitionRow", b =>
+                {
+                    b.Property<Guid>("RecognitionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("recognition_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("DeliveryStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("delivery_status");
+
+                    b.Property<string>("FromLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("from_level");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_id");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("ToLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("to_level");
+
+                    b.HasKey("RecognitionId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("DeliveryStatus", "NextAttemptAtUtc", "LockedUntilUtc");
+
+                    b.ToTable("adherence_recognitions", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRow", b =>
+                {
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<long>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<int>("EvidenceCount")
+                        .HasColumnType("int")
+                        .HasColumnName("evidence_count");
+
+                    b.Property<string>("Level")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level");
+
+                    b.Property<decimal?>("Score")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("score");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("OwnerId");
+
+                    b.ToTable("adherence_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.ProcessedAdherenceEventRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("processed_at_utc");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("source_id");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("Kind", "SourceId")
+                        .IsUnique();
+
+                    b.ToTable("adherence_processed_events", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<Guid>("ClinicalAttentionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinical_attention_id");
+
+                    b.Property<DateTime>("LinkedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("linked_at_utc");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("ClinicalAttentionId")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appointment_attention_links_attention");
+
+                    b.ToTable("appointment_attention_links", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<DateTime>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc")
+                        .HasDatabaseName("ix_appointment_outbox_pending");
+
+                    b.ToTable("appointment_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<DateTime>("DueAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("due_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("Status", "DueAtUtc")
+                        .HasDatabaseName("ix_appointment_reminders_due");
+
+                    b.ToTable("appointment_reminders", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", b =>
+                {
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("appointment_id");
+
+                    b.Property<TimeOnly?>("ActiveSlotTime")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("time(6)")
+                        .HasColumnName("active_slot_time")
+                        .HasComputedColumnSql("CASE WHEN `status` IN ('Pending', 'Attended') THEN `start_time` ELSE NULL END", true);
+
+                    b.Property<DateOnly>("AppointmentDate")
+                        .HasColumnType("date")
+                        .HasColumnName("appointment_date");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid?>("ClinicalAttentionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinical_attention_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("end_time");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("start_time");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.HasKey("AppointmentId");
+
+                    b.HasIndex("OwnerId")
+                        .HasDatabaseName("ix_appointments_owner");
+
+                    b.HasIndex("ClinicId", "AppointmentDate")
+                        .HasDatabaseName("ix_appointments_clinic_date");
+
+                    b.HasIndex("VeterinarianId", "AppointmentDate", "ActiveSlotTime")
+                        .IsUnique()
+                        .HasDatabaseName("ux_appointments_vet_active_slot");
+
+                    b.HasIndex("VeterinarianId", "AppointmentDate", "StartTime")
+                        .HasDatabaseName("ix_appointments_vet_agenda");
+
+                    b.ToTable("appointments", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid>("AdministratorId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("administrator_id");
+
+                    b.HasKey("ClinicId", "AdministratorId");
+
+                    b.ToTable("clinic_administrators", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicOpeningHourRow", b =>
+                {
+                    b.Property<Guid>("OpeningHoursId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("opening_hours_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<TimeOnly>("CloseTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("close_time");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)")
+                        .HasColumnName("day_of_week");
+
+                    b.Property<TimeOnly>("OpenTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("open_time");
+
+                    b.HasKey("OpeningHoursId");
+
+                    b.HasIndex("ClinicId");
+
+                    b.ToTable("clinic_opening_hours", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)")
+                        .HasColumnName("address");
+
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)")
+                        .HasColumnName("phone");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("ClinicId");
+
+                    b.ToTable("clinics", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicVeterinarianRow", b =>
+                {
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.HasKey("ClinicId", "VeterinarianId");
+
+                    b.ToTable("clinic_veterinarians", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationAdministrationRow", b =>
+                {
+                    b.Property<Guid>("AdministrationId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("administration_id");
+
+                    b.Property<DateTime>("AdministeredAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("administered_at_utc");
+
+                    b.Property<Guid>("AdministeredBy")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("administered_by");
+
+                    b.Property<Guid>("DoseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("dose_id");
+
+                    b.Property<DateTime>("RecordedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("recorded_at_utc");
+
+                    b.HasKey("AdministrationId");
+
+                    b.HasIndex("DoseId")
+                        .IsUnique();
+
+                    b.ToTable("medication_administrations", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDeviceTokenRow", b =>
+                {
+                    b.Property<Guid>("DeviceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("device_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("LastSeenAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("last_seen_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<string>("Platform")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("platform");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(4096)
+                        .HasColumnType("varchar(4096)")
+                        .HasColumnName("fcm_token");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("DeviceId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("OwnerId", "IsActive");
+
+                    b.ToTable("medication_device_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDoseRow", b =>
+                {
+                    b.Property<Guid>("DoseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("dose_id");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<TimeOnly>("LocalTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("local_time");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<int>("ScheduleVersion")
+                        .HasColumnType("int")
+                        .HasColumnName("schedule_version");
+
+                    b.Property<DateTime>("ScheduledAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("scheduled_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("DoseId");
+
+                    b.HasIndex("ScheduleId");
+
+                    b.HasIndex("Status", "ScheduledAtUtc");
+
+                    b.HasIndex("PlanId", "ScheduleVersion", "ScheduleId", "LocalDate")
+                        .IsUnique();
+
+                    b.ToTable("medication_doses", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int")
+                        .HasColumnName("attempts");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime>("NextAttemptAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload");
+
+                    b.Property<Guid?>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc");
+
+                    b.ToTable("medication_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationPlanRow", b =>
+                {
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<Guid?>("ClinicalAttentionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinical_attention_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Instructions")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)")
+                        .HasColumnName("instructions");
+
+                    b.Property<string>("MedicationName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("medication_name");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<bool>("RemindersEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("reminders_enabled");
+
+                    b.Property<string>("Route")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("route");
+
+                    b.Property<int>("ScheduleVersion")
+                        .HasColumnType("int")
+                        .HasColumnName("schedule_version");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.HasKey("PlanId");
+
+                    b.HasIndex("PetId");
+
+                    b.HasIndex("ClinicId", "VeterinarianId");
+
+                    b.HasIndex("Status", "EndDate");
+
+                    b.ToTable("medication_plans", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationReminderPreferenceRow", b =>
+                {
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("enabled");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("PlanId");
+
+                    b.ToTable("medication_reminder_preferences", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationReminderRow", b =>
+                {
+                    b.Property<Guid>("ReminderId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("reminder_id");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("int")
+                        .HasColumnName("attempts");
+
+                    b.Property<Guid>("DoseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("dose_id");
+
+                    b.Property<DateTime>("DueAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("due_at_utc");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime>("NextAttemptAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasPrecision(6)
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("ReminderId");
+
+                    b.HasIndex("DoseId")
+                        .IsUnique();
+
+                    b.HasIndex("PlanId");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc");
+
+                    b.ToTable("medication_reminders", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationScheduleRow", b =>
+                {
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("amount");
+
+                    b.Property<int>("DaysMask")
+                        .HasColumnType("int")
+                        .HasColumnName("days_mask");
+
+                    b.Property<TimeOnly>("LocalTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("local_time");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<int>("ScheduleVersion")
+                        .HasColumnType("int")
+                        .HasColumnName("schedule_version");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("unit");
+
+                    b.HasKey("ScheduleId");
+
+                    b.HasIndex("PlanId", "ScheduleVersion");
+
+                    b.ToTable("medication_schedules", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingActivePlanRow", b =>
+                {
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.HasKey("PetId");
+
+                    b.HasIndex("PlanId")
+                        .IsUnique();
+
+                    b.ToTable("nutrition_active_plans", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc");
+
+                    b.ToTable("nutrition_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRevisionRow", b =>
+                {
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int")
+                        .HasColumnName("version");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("FoodName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("food_name");
+
+                    b.Property<string>("Recommendations")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)")
+                        .HasColumnName("recommendations");
+
+                    b.Property<DateTime>("ReplacedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("replaced_at_utc");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("time_zone_id");
+
+                    b.HasKey("PlanId", "Version");
+
+                    b.ToTable("nutrition_plan_revisions", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRow", b =>
+                {
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<long>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("FoodName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)")
+                        .HasColumnName("food_name");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<string>("Recommendations")
+                        .HasMaxLength(4000)
+                        .HasColumnType("varchar(4000)")
+                        .HasColumnName("recommendations");
+
+                    b.Property<bool>("RemindersEnabled")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("reminders_enabled");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.Property<string>("TimeZoneId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)")
+                        .HasColumnName("time_zone_id");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("int")
+                        .HasColumnName("version");
+
+                    b.Property<Guid>("VeterinarianId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("veterinarian_id");
+
+                    b.HasKey("PlanId");
+
+                    b.HasIndex("ClinicId", "VeterinarianId");
+
+                    b.HasIndex("PetId", "Status");
+
+                    b.ToTable("nutrition_feeding_plans", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingReminderRow", b =>
+                {
+                    b.Property<Guid>("ReminderId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("reminder_id");
+
+                    b.Property<int>("AttemptCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_id");
+
+                    b.Property<DateOnly>("LocalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("local_date");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<int>("PlanVersion")
+                        .HasColumnType("int")
+                        .HasColumnName("plan_version");
+
+                    b.Property<DateTime?>("ProcessedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("processed_at_utc");
+
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<DateTime>("ScheduledAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("scheduled_at_utc");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("status");
+
+                    b.HasKey("ReminderId");
+
+                    b.HasIndex("Status", "ScheduledAtUtc");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc", "LockedUntilUtc");
+
+                    b.HasIndex("PlanId", "PlanVersion", "ScheduleId", "LocalDate")
+                        .IsUnique();
+
+                    b.ToTable("nutrition_reminders", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingScheduleRow", b =>
+                {
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("plan_id");
+
+                    b.Property<int>("PlanVersion")
+                        .HasColumnType("int")
+                        .HasColumnName("plan_version");
+
+                    b.Property<Guid>("ScheduleId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("schedule_id");
+
+                    b.Property<string>("DaysOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)")
+                        .HasColumnName("days_of_week");
+
+                    b.Property<TimeOnly>("LocalTime")
+                        .HasColumnType("time(6)")
+                        .HasColumnName("local_time");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("unit");
+
+                    b.HasKey("PlanId", "PlanVersion", "ScheduleId");
+
+                    b.ToTable("nutrition_feeding_schedules", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.PetClinicalCare.Persistence.PetClinicLinkRow", b =>
+                {
+                    b.Property<Guid>("PetId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("pet_id");
+
+                    b.Property<Guid>("ClinicId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("clinic_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTime>("LinkedAt")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("linked_at");
+
+                    b.HasKey("PetId", "ClinicId");
+
+                    b.ToTable("pet_clinic_links", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Domain.Modules.PetClinicalCare.Aggregates.ClinicalRecord", b =>
                 {
                     b.OwnsMany("VetPax.Domain.Modules.PetClinicalCare.Entities.ClinicalAttention", "Attentions", b1 =>
@@ -164,6 +1397,153 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Attentions");
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRecognitionRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRow", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", null)
+                        .WithOne()
+                        .HasForeignKey("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentRow", null)
+                        .WithOne()
+                        .HasForeignKey("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentReminderRow", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicAdministratorRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicOpeningHourRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicVeterinarianRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.ClinicManagement.Persistence.ClinicRow", null)
+                        .WithMany()
+                        .HasForeignKey("ClinicId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationAdministrationRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDoseRow", null)
+                        .WithMany()
+                        .HasForeignKey("DoseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDoseRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationScheduleRow", null)
+                        .WithMany()
+                        .HasForeignKey("ScheduleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationReminderPreferenceRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationPlanRow", null)
+                        .WithOne()
+                        .HasForeignKey("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationReminderPreferenceRow", "PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationReminderRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationDoseRow", null)
+                        .WithMany()
+                        .HasForeignKey("DoseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationScheduleRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.MedicationTreatment.Persistence.MedicationPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingActivePlanRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRevisionRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingReminderRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingScheduleRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.NutritionManagement.Persistence.FeedingPlanRow", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

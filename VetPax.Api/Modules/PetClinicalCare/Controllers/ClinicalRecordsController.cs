@@ -1,8 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
 using VetPax.Api.Modules.PetClinicalCare.Resources;
+using VetPax.Application.Modules.IdentityAccessManagement.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
-using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterClinicalAttention;
+using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
+using VetPax.Application.Modules.PetClinicalCare.Ports;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
@@ -11,67 +17,63 @@ namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 public sealed class ClinicalRecordsController : ControllerBase
 {
     private readonly GetClinicalHistoryHandler _handler;
-    private readonly IWebHostEnvironment _environment;
     private readonly RegisterClinicalAttentionHandler _registerHandler;
+    private readonly IAuthenticatedUserPort _currentUser;
 
-    
     public ClinicalRecordsController(
         GetClinicalHistoryHandler handler,
         RegisterClinicalAttentionHandler registerHandler,
-        IWebHostEnvironment environment)
+        IAuthenticatedUserPort currentUser)
     {
         _handler = handler;
         _registerHandler = registerHandler;
-        _environment = environment;
+        _currentUser = currentUser;
     }
 
-
     [HttpGet]
+    [Authorize(Roles = "owner")]
     [ProducesResponseType(
         typeof(ClinicalHistoryResponse),
         StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetHistory(
         Guid petId,
-        [FromHeader(Name = "X-Dev-Owner-Id")] string? devOwnerId,
         CancellationToken cancellationToken)
     {
-        if (!_environment.IsDevelopment())
-            return StatusCode(403, new
-            {
-                message = "Authentication integration is required."
-            });
-
         if (petId == Guid.Empty)
+        {
             return BadRequest(new
             {
                 message = "A valid pet ID is required."
             });
+        }
 
-        if (!Guid.TryParse(devOwnerId, out var ownerGuid)
-            || ownerGuid == Guid.Empty)
-            return BadRequest(new
-            {
-                message = "A valid X-Dev-Owner-Id is required."
-            });
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null)
+            return Unauthorized();
 
         try
         {
             var query = new GetClinicalHistoryQuery(
                 new PetId(petId),
-                new OwnerId(ownerGuid)
-            );
+                new OwnerId(identity.UserId.Value));
 
             var result = await _handler.HandleAsync(
-                query, cancellationToken);
+                query,
+                cancellationToken);
 
             if (result is null)
+            {
                 return NotFound(new
                 {
                     message = "Pet or clinical record not found."
                 });
+            }
 
             return Ok(new ClinicalHistoryResponse(
                 result.PetId,
@@ -91,46 +93,46 @@ public sealed class ClinicalRecordsController : ControllerBase
             });
         }
     }
-    
+
     [HttpPost]
+    [Authorize(Roles = "veterinarian")]
     [ProducesResponseType(
         typeof(RegisterClinicalAttentionResponse),
         StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> RegisterAttention(
         Guid petId,
+        [FromQuery] Guid clinicId,
+        [FromQuery] Guid? appointmentId,
         [FromBody] RegisterClinicalAttentionRequest request,
-        [FromHeader(Name = "X-Dev-User-Id")] string? devUserId,
-        [FromHeader(Name = "X-Dev-Clinic-Id")] string? devClinicId,
         CancellationToken cancellationToken)
     {
-        if (!_environment.IsDevelopment())
-            return StatusCode(403, new
-            {
-                message = "Authentication integration is required."
-            });
-
-        if (petId == Guid.Empty ||
-            !Guid.TryParse(devUserId, out var userId) ||
-            userId == Guid.Empty ||
-            !Guid.TryParse(devClinicId, out var clinicId) ||
-            clinicId == Guid.Empty)
+        if (petId == Guid.Empty || clinicId == Guid.Empty ||
+            (appointmentId.HasValue &&
+             appointmentId.Value == Guid.Empty))
         {
             return BadRequest(new
             {
-                message = "Valid pet, user and clinic IDs are required."
+                message = "Valid pet, clinic and appointment IDs are required."
             });
         }
+
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null)
+            return Unauthorized();
 
         try
         {
             var requester = new AccessRequester(
-                userId,
+                identity.UserId.Value,
                 RequesterRole.Veterinarian,
-                new ClinicId(clinicId)
-            );
+                new ClinicId(clinicId));
 
             var command = new RegisterClinicalAttentionCommand(
                 new PetId(petId),
@@ -140,29 +142,29 @@ public sealed class ClinicalRecordsController : ControllerBase
                 request.Diagnosis,
                 request.TreatmentSummary,
                 request.Observations,
-                request.Indicators?.Select(i =>
-                    new ClinicalIndicatorInput(
+                request.Indicators?
+                    .Select(i => new ClinicalIndicatorInput(
                         i.Name,
                         i.Value,
-                        i.Unit
-                    )).ToArray()
+                        i.Unit))
+                    .ToArray()
             );
 
-            var result = await _registerHandler.HandleAsync(
-                command,
-                cancellationToken
-            );
-
-            var response = new RegisterClinicalAttentionResponse(
-                result.AttentionId,
-                result.ClinicalRecordId,
-                result.PetId
-            );
+            var result = appointmentId.HasValue
+                ? await _registerHandler.HandleForAppointmentAsync(
+                    command,
+                    appointmentId.Value,
+                    cancellationToken)
+                : await _registerHandler.HandleAsync(
+                    command,
+                    cancellationToken);
 
             return Created(
                 $"/api/v1/pets/{petId}/clinical-records",
-                response
-            );
+                new RegisterClinicalAttentionResponse(
+                    result.AttentionId,
+                    result.ClinicalRecordId,
+                    result.PetId));
         }
         catch (KeyNotFoundException ex)
         {
@@ -179,6 +181,20 @@ public sealed class ClinicalRecordsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (ClinicalAppointmentLinkConflictException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException is MySqlException
+            {
+                Number: 1062
+            })
+        {
+            return Conflict(new
+            {
+                message = "Appointment already has a linked attention."
+            });
+        }
     }
-
 }

@@ -1,61 +1,57 @@
 ﻿
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using VetPax.Api.Modules.PetClinicalCare.Resources;
+using VetPax.Application.Modules.IdentityAccessManagement.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalEvolution;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
 [ApiController]
+[Authorize(Roles = "veterinarian")]
 [Route("api/v1/pets/{petId:guid}/evolution")]
 public sealed class ClinicalEvolutionController : ControllerBase
 {
     private readonly GetClinicalEvolutionHandler _handler;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IAuthenticatedUserPort _currentUser;
 
     public ClinicalEvolutionController(
         GetClinicalEvolutionHandler handler,
-        IWebHostEnvironment environment)
+        IAuthenticatedUserPort currentUser)
     {
         _handler = handler;
-        _environment = environment;
+        _currentUser = currentUser;
     }
 
     [HttpGet]
-    [ProducesResponseType(
-        typeof(ClinicalEvolutionResponse),
-        StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetEvolution(
         Guid petId,
-        [FromHeader(Name = "X-Dev-User-Id")] string? devUserId,
-        [FromHeader(Name = "X-Dev-Clinic-Id")] string? devClinicId,
+        [FromQuery] Guid clinicId,
         CancellationToken cancellationToken)
     {
-        if (!_environment.IsDevelopment())
-            return StatusCode(403, new
-            {
-                message = "Authentication integration is required."
-            });
-
-        if (petId == Guid.Empty ||
-            !Guid.TryParse(devUserId, out var userId) ||
-            userId == Guid.Empty ||
-            !Guid.TryParse(devClinicId, out var clinicId) ||
-            clinicId == Guid.Empty)
+        if (petId == Guid.Empty || clinicId == Guid.Empty)
         {
             return BadRequest(new
             {
-                message = "Valid pet, user and clinic IDs are required."
+                message = "Valid pet and clinic IDs are required."
             });
         }
+
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null)
+            return Unauthorized();
 
         try
         {
             var requester = new AccessRequester(
-                userId,
+                identity.UserId.Value,
                 RequesterRole.Veterinarian,
                 new ClinicId(clinicId)
             );
@@ -70,33 +66,27 @@ public sealed class ClinicalEvolutionController : ControllerBase
                 cancellationToken
             );
 
-            var entries = result.Entries
-                .Select(e => new EvolutionEntryResponse(
-                    e.AttentionDate,
-                    e.IndicatorName,
-                    e.Value,
-                    e.Unit
-                ))
-                .ToArray();
-
-            return Ok(new ClinicalEvolutionResponse(
-                result.PetId,
-                result.HasSufficientData,
-                result.HasSufficientData
-                    ? null
-                    : "Insufficient comparable clinical data.",
-                entries
-            ));
+            return Ok(result);
         }
         catch (KeyNotFoundException ex)
         {
-            return NotFound(new { message = ex.Message });
+            return NotFound(new
+            {
+                message = ex.Message
+            });
         }
         catch (UnauthorizedAccessException)
         {
             return StatusCode(403, new
             {
                 message = "Access denied."
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new
+            {
+                message = ex.Message
             });
         }
     }

@@ -3,6 +3,10 @@
   &lt;Project Location="C:\Users\rafae\TRABAJOS_UPC\Rider\Backends\VetPax-Backend\tests\VetPax.Tests" Presentation="&amp;lt;VetPax.Tests&amp;gt;" /&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=DOTNET_005FENVIRONMENT/@EntryIndexRemoved">True</s:Boolean>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=GOOGLE_005FAPPLICATION_005FCREDENTIALS/@EntryIndexedValue">C:\firebase-secrets\vetpax-admin.json</s:String>
 	<s:Boolean x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=RESHARPER_005FHOST_005FVERSION/@EntryIndexRemoved">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=RESHARPER_005FHOST/@EntryIndexRemoved">True</s:Boolean>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=VETPAX_005FE2E_005FBASE_005FURL/@EntryIndexedValue">https://localhost:7175</s:String>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=VETPAX_005FE2E_005FTARGET_005FDB/@EntryIndexedValue">vetpax_test_db</s:String>
+	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=VETPAX_005FFIREBASE_005FPROJECT_005FID/@EntryIndexedValue">vetpax</s:String>
 	<s:String x:Key="/Default/Housekeeping/UnitTestingMru/UnitTestRunner/EnvironmentVariablesIndexed/=VETPAX_005FTEST_005FMYSQL/@EntryIndexedValue">Server=localhost;Port=3306;Database=vetpax_test_db;User=root;Password=123456789;</s:String></wpf:ResourceDictionary>
