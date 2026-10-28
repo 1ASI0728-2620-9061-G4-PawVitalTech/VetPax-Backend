@@ -5,6 +5,7 @@ using VetPax.Application.Modules.ClinicManagement.Services;
 using VetPax.Application.Modules.ClinicManagement.UseCases.AssignVeterinarian;
 using VetPax.Application.Modules.ClinicManagement.UseCases.GetClinicPatients;
 using VetPax.Application.Modules.ClinicManagement.UseCases.GetClinicProfile;
+using VetPax.Application.Modules.ClinicManagement.UseCases.ListClinics;
 using VetPax.Application.Modules.ClinicManagement.UseCases.ProvisionClinic;
 using VetPax.Application.Modules.ClinicManagement.UseCases.UpdateClinicProfile;
 using VetPax.Domain.Modules.ClinicManagement.Repositories;
@@ -48,6 +49,11 @@ public static class DependencyInjection
 
         services.AddScoped<ProvisionClinicHandler>();
         services.AddScoped<AssignVeterinarianHandler>();
+        services.AddScoped<IClinicDirectoryPort,
+            ClinicDirectoryAdapter>();
+
+        services.AddScoped<ListClinicsHandler>();
+        services.AddScoped<ListClinicVeterinariansHandler>();
 
         return services;
     }

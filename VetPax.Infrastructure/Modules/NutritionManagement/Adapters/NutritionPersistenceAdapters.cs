@@ -156,7 +156,9 @@ public sealed class NutritionReminderAdapter : INutritionReminderPort
         var persistedRows = await _db.Set<FeedingReminderRow>()
             .Where(x =>
                 x.PlanId == planId &&
-                cancelable.Contains(x.Status))
+                (x.Status == "Pending" ||
+                 x.Status == "Retry" ||
+                 x.Status == "Processing"))
             .ToListAsync(cancellationToken);
 
         foreach (var reminder in localRows.Concat(persistedRows)

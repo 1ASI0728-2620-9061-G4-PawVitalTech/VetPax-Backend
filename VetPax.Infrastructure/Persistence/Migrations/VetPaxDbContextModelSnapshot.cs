@@ -80,6 +80,194 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                     b.ToTable("pets", (string)null);
                 });
 
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceOutboxRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("varchar(250)")
+                        .HasColumnName("event_type");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("longtext")
+                        .HasColumnName("payload_json");
+
+                    b.Property<DateTime?>("PublishedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("published_at_utc");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("PublishedAtUtc");
+
+                    b.HasIndex("PublishedAtUtc", "NextAttemptAtUtc", "LockedUntilUtc");
+
+                    b.ToTable("adherence_outbox", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRecognitionRow", b =>
+                {
+                    b.Property<Guid>("RecognitionId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("recognition_id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("int")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("DeliveryStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("delivery_status");
+
+                    b.Property<string>("FromLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("from_level");
+
+                    b.Property<Guid?>("LeaseId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_id");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime?>("SentAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("sent_at_utc");
+
+                    b.Property<string>("ToLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("to_level");
+
+                    b.HasKey("RecognitionId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("DeliveryStatus", "NextAttemptAtUtc", "LockedUntilUtc");
+
+                    b.ToTable("adherence_recognitions", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRow", b =>
+                {
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<long>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("concurrency_stamp");
+
+                    b.Property<int>("EvidenceCount")
+                        .HasColumnType("int")
+                        .HasColumnName("evidence_count");
+
+                    b.Property<string>("Level")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)")
+                        .HasColumnName("level");
+
+                    b.Property<decimal?>("Score")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)")
+                        .HasColumnName("score");
+
+                    b.Property<DateTime>("UpdatedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("OwnerId");
+
+                    b.ToTable("adherence_profiles", (string)null);
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.ProcessedAdherenceEventRow", b =>
+                {
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("event_id");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("varchar(60)")
+                        .HasColumnName("kind");
+
+                    b.Property<DateTime>("OccurredAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("occurred_at_utc");
+
+                    b.Property<Guid>("OwnerId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("owner_id");
+
+                    b.Property<DateTime>("ProcessedAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("processed_at_utc");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("source_id");
+
+                    b.HasKey("EventId");
+
+                    b.HasIndex("OwnerId");
+
+                    b.HasIndex("Kind", "SourceId")
+                        .IsUnique();
+
+                    b.ToTable("adherence_processed_events", (string)null);
+                });
+
             modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>
                 {
                     b.Property<Guid>("AppointmentId")
@@ -1209,6 +1397,15 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         });
 
                     b.Navigation("Attentions");
+                });
+
+            modelBuilder.Entity("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRecognitionRow", b =>
+                {
+                    b.HasOne("VetPax.Infrastructure.Modules.AdherenceGamification.Persistence.AdherenceRow", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("VetPax.Infrastructure.Modules.AppointmentManagement.Persistence.AppointmentAttentionLinkRow", b =>

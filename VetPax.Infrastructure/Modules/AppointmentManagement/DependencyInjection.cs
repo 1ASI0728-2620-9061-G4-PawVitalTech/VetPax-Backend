@@ -13,6 +13,7 @@ using VetPax.Domain.Modules.AppointmentManagement.Repositories;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Adapters;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Repositories;
 using VetPax.Application.Modules.PetClinicalCare.Ports;
+using VetPax.Application.Modules.AppointmentManagement.UseCases.GetAvailableSlots;
 
 namespace VetPax.Infrastructure.Modules.AppointmentManagement;
 
@@ -44,6 +45,8 @@ public static class DependencyInjection
         services.AddScoped<
             IAppointmentNotificationPort,
             AppointmentNotificationAdapter>();
+        
+        services.AddScoped<GetAvailableSlotsHandler>();
 
         services.AddScoped<AppointmentAccessService>();
 

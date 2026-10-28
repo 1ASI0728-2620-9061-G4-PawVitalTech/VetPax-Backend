@@ -1,5 +1,7 @@
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 using VetPax.Api;
 using VetPax.Application.Common.Ports;
@@ -22,6 +24,14 @@ using VetPax.Api.Modules.NutritionManagement.Adapters;
 using VetPax.Application.Modules.NutritionManagement.Ports;
 using VetPax.Infrastructure.Modules.NutritionManagement;
 using VetPax.Api.Modules.NutritionManagement.BackgroundServices;
+using VetPax.Api.Modules.AdherenceGamification.Adapters;
+using VetPax.Api.Modules.AdherenceGamification.BackgroundServices;
+using VetPax.Application.Modules.AdherenceGamification.Ports;
+using VetPax.Infrastructure.Modules.AdherenceGamification;
+using VetPax.Infrastructure.Messaging;
+using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
+using VetPax.Application.Common.Ports;
+using VetPax.Api.Modules.IdentityAccessManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +44,44 @@ builder.Services.AddControllers()
         );
     });
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.OAuth2,
+        Flows = new OpenApiOAuthFlows
+        {
+            AuthorizationCode = new OpenApiOAuthFlow
+            {
+                AuthorizationUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/auth"),
+                TokenUrl = new Uri("http://localhost:8080/realms/vetpax/protocol/openid-connect/token"),
+                Scopes = new Dictionary<string, string>
+                {
+                    ["openid"] = "OpenID",
+                    ["profile"] = "Profile",
+                    ["email"] = "Email"
+                }
+            }
+        }
+    };
+
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Components ??= new OpenApiComponents();
+        document.Components.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
+        document.Components.SecuritySchemes["oidc"] = securityScheme;
+
+        var oidcRef = new OpenApiSecuritySchemeReference("oidc", document);
+
+        document.Security ??= new List<OpenApiSecurityRequirement>();
+        document.Security.Add(new OpenApiSecurityRequirement
+        {
+            [oidcRef] = new List<string> { "openid", "profile", "email" }
+        });
+
+        return Task.CompletedTask;
+    });
+});
 
 // MySQL connection
 var connectionString = builder.Configuration
@@ -93,10 +140,13 @@ builder.Services.AddHostedService<
 
 
 // Keycloak and JWT authentication
+
 builder.Services.AddIamInfrastructure(
     builder.Configuration,
-    builder.Environment
-);
+    builder.Environment);
+
+builder.Services.AddIamApi();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddScoped<
@@ -104,6 +154,30 @@ builder.Services.AddScoped<
     NutritionHttpIdentityAdapter>();
 
 builder.Services.AddNutritionManagementInfrastructure();
+
+
+builder.Services.AddHttpContextAccessor();
+
+builder.Services.AddScoped<
+    IAdherenceCurrentOwner,
+    HttpAdherenceCurrentOwner>();
+
+builder.Services.AddAdherenceGamificationInfrastructure(
+    builder.Configuration);
+
+builder.Services.AddHostedService<AdherenceRecognitionWorker>();
+
+
+// Preserve development logging.
+builder.Services.AddScoped<DevelopmentDomainEventPublisher>();
+
+// Route AppointmentManagement and MedicationTreatment
+// events to AdherenceGamification.
+builder.Services.AddScoped<
+    IDomainEventPublisher,
+    AdherenceDomainEventPublisher>();
+
+builder.Services.AddHostedService<AdherenceOutboxWorker>();
 
 var app = builder.Build();
 
@@ -118,6 +192,9 @@ if (app.Environment.IsDevelopment())
             "/openapi/v1.json",
             "VetPax API v1"
         );
+        options.OAuthClientId("vetpax-swagger");
+        options.OAuthUsePkce();
+        options.OAuthScopes("openid", "profile", "email");
     });
 
     using var scope = app.Services.CreateScope();
@@ -129,7 +206,16 @@ if (app.Environment.IsDevelopment())
 }
 
 // HTTP pipeline
-app.UseHttpsRedirection();
+// HTTPS obligatorio fuera del entorno de desarrollo.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
+
+app.UseRouting();
+
+// Required for the registration rate-limit policy.
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -8,6 +8,8 @@ public sealed record ProvisionedIdentity(
 public interface IIdentityProvisioningPort
 {
     Task<ProvisionedIdentity> RegisterOwnerAsync(
+        string firstName,
+        string lastName,
         string email,
         string password,
         CancellationToken cancellationToken = default);
