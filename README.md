@@ -463,8 +463,9 @@ Verificaciones mínimas:
 1. En **Realm roles** aparecen `owner`, `veterinarian` y `clinic_administrator`.
 2. En **Clients** están `vetpax-api`, `vetpax-dev`, `vetpax-admin` y, si fue creado en la instalación original, `vetpax-swagger`.
 3. En **Users** aparecen las cuentas incluidas en el momento del respaldo. **No hace falta volver a registrarlas.**
-4. La URL **http://localhost:8080/realms/vetpax/.well-known/openid-configuration** responde con la configuración OpenID Connect del realm.
-5. Al ejecutar `GET /api/v1/auth/me` y `GET /api/v1/auth/me/permissions` desde Swagger, los roles se resuelven correctamente.
+4. En **Clients → `vetpax-dev` → Settings**, están autorizadas las redirecciones y orígenes para **Mobile y Web** descritos en **6.3**.
+5. La URL **http://localhost:8080/realms/vetpax/.well-known/openid-configuration** responde con la configuración OpenID Connect del realm.
+6. Al ejecutar `GET /api/v1/auth/me` y `GET /api/v1/auth/me/permissions` desde Swagger, los roles se resuelven correctamente.
 
 El `compose.yaml` de desarrollo publica Keycloak en **`127.0.0.1:8080`**. Esto es deliberado: cada copia es accesible desde la computadora que la ejecuta, **no es un servidor compartido accesible por internet**. El `KC_HOSTNAME` está configurado para `http://localhost:8080`; si se decide utilizar un host o puerto distinto, se debe actualizar la configuración OAuth y el issuer de los tokens, no solo el puerto.
 
@@ -515,6 +516,20 @@ Abre **https://localhost:7175/swagger** y autentícate con las cuentas de desarr
 
 **Respaldo periódico:** cada vez que agregues usuarios, modifiques roles, clientes, redirecciones o secretos de Keycloak, el dump anterior queda desactualizado. Si quieres compartir los cambios con el equipo, crea un **nuevo dump** y acuerda cómo restaurarlo; **no lo importes directamente sobre las bases ya pobladas de tus compañeros**.
 
+#### 5.5.7. Actualizar `vetpax-dev` cuando ya compartiste un respaldo anterior
+
+Si modificaste las redirecciones de `vetpax-dev` **después** de haber compartido el último `vetpax-keycloak.dump` (por ejemplo, para incorporar VetPax Mobile o VetPax Web), esos cambios **no llegan automáticamente** a los Keycloak de los demás: cada desarrollador tiene su propio PostgreSQL local.
+
+| Situación del compañero | Procedimiento recomendado |
+|---|---|
+| **Aún no instaló Keycloak** o tiene una instalación completamente nueva y vacía | Quien mantiene la configuración genera un **nuevo dump** con los comandos de **5.5.1**. El compañero restaura esa versión siguiendo **5.5.2 a 5.5.4**. |
+| **Ya tiene Keycloak funcionando con cuentas y configuraciones propias** | **No restaurar el dump completo encima de su base actual.** Actualizar únicamente `vetpax-dev` en la consola, siguiendo **6.3**. |
+| Cambiaron roles, cuentas, secretos o varias configuraciones, y se desea igualar entornos existentes | Coordinar una migración o reemplazo controlado, **respaldando primero** las instalaciones afectadas. No ejecutar `pg_restore` directamente sobre una base poblada. |
+
+**Para el caso actual (solo nuevas URLs de Mobile/Web):** la opción más sencilla para compañeros que ya están trabajando es entrar a **Clients → `vetpax-dev` → Settings** y agregar las URLs faltantes de **6.3**. Esto **no requiere volver a registrar usuarios, recrear el realm ni reiniciar Docker**. Presionar **Save** en Keycloak es suficiente para guardar esas URLs.
+
+Si vas a compartir una instalación nueva con otro compañero, vuelve a crear el dump **después de guardar** los cambios. Reemplaza el archivo de respaldo que compartes por la nueva versión, de forma privada; **no lo subas a GitHub**.
+
 ---
 
 ## 6. Configurar Keycloak, clientes y usuarios
@@ -552,7 +567,62 @@ También puedes adaptar el cliente de prueba existente, pero **el Client ID de S
 
 **Alternativa Postman:** usar `vetpax-dev` como cliente público, flujo **Authorization Code with PKCE**, scopes `openid profile email` y una de las URI de callback de Postman autorizadas en el realm.
 
-### 6.3. Dar acceso administrativo al backend
+### 6.3. Configurar el cliente `vetpax-dev` para Mobile y Web
+
+El cliente público **`vetpax-dev`** se utiliza para las aplicaciones de desarrollo y pruebas de OAuth2/OIDC. La configuración de Keycloak puede cambiar por equipo si se usan puertos distintos, pero con las URLs locales actuales de VetPax debe incluir las siguientes entradas.
+
+Entra a **http://localhost:8080/admin/** → realm **`vetpax`** → **Clients** → **`vetpax-dev`** → **Settings**.
+
+**Configuración general del cliente:**
+
+| Campo | Valor |
+|---|---|
+| Client ID | `vetpax-dev` |
+| Client type | `OpenID Connect` |
+| Enabled | **On** |
+| Client authentication | **Off** (cliente público, **sin secreto** en Flutter/Angular) |
+| Standard flow | **On** (Authorization Code) |
+| PKCE | Ambos frontends usan **S256**; mantener `code_challenge_method=S256`. Si se configura «Require PKCE», elegir S256 y comprobar que las demás herramientas OAuth de desarrollo también lo soporten. |
+
+En **Access settings → Valid redirect URIs**, conserva las que ya utilizas y comprueba que estén estas (una entrada por línea):
+
+```text
+com.vetpax.app:/oauthredirect
+http://localhost:4200/auth/callback
+http://localhost:5500/*
+```
+
+| URI | Uso |
+|---|---|
+| `com.vetpax.app:/oauthredirect` | **VetPax Mobile (Flutter Android)**: retorno a la app después del login con Keycloak. |
+| `http://localhost:4200/auth/callback` | **VetPax Web (Angular)**: callback de OAuth2/PKCE. **Esta es la URI exacta que debe estar autorizada** para evitar `Invalid parameter: redirect_uri`. |
+| `http://localhost:5500/*` | Flutter Web **solo si** se realizan pruebas opcionales desde Chrome en ese puerto; no sustituye el callback específico de Angular. |
+
+Si también usas Postman con `vetpax-dev`, conserva sus callbacks existentes, por ejemplo:
+
+```text
+https://oauth.pstmn.io/v1/browser-callback
+https://oauth.pstmn.io/v1/callback
+```
+
+La URI `https://localhost:7175/swagger/oauth2-redirect.html` puede estar autorizada en `vetpax-dev` para pruebas particulares, pero **el Swagger del backend revisado utiliza `vetpax-swagger`**, por lo que debe configurarse ese **otro cliente** como se indica en **6.2**. Agregar una URI a `vetpax-dev` no cambia automáticamente el Client ID de Swagger.
+
+En **Access settings → Web origins**, agrega o conserva:
+
+```text
+http://localhost:4200
+http://localhost:5500
+```
+
+**No agregues la ruta `/auth/callback` en Web origins:** allí va el **origen**, es decir, esquema + host + puerto. Tampoco cambies `http` por `https` si estás ejecutando Angular localmente con `npm start` sobre HTTP.
+
+Presiona **Save** y vuelve a intentar iniciar sesión en Angular. El flujo esperado es **Web → Keycloak → `http://localhost:4200/auth/callback` → `/dashboard`**. Para Mobile, el retorno autorizado es el esquema personalizado `com.vetpax.app:/oauthredirect`.
+
+**Importante para compañeros:** si restauran un **dump actualizado** de Keycloak en una base nueva, estas entradas estarán incluidas siempre que existieran cuando se creó el respaldo. Si restauraron un dump **anterior** o ya tienen su propia instalación, deben comprobarlas y agregarlas manualmente; ver **5.5.7**.
+
+> Esta sección configura **autenticación y redirecciones**. No instala ni ejecuta los frontends. El registro público `POST /api/v1/auth/register` crea propietarios (`owner`); no sirve para conceder automáticamente los roles de veterinario o administrador de clínica.
+
+### 6.4. Dar acceso administrativo al backend
 
 El endpoint `POST /api/v1/auth/register` crea cuentas `owner` mediante la API de administración de Keycloak. Por eso, `vetpax-admin` debe disponer de:
 
@@ -562,7 +632,7 @@ El endpoint `POST /api/v1/auth/register` crea cuentas `owner` mediante la API de
 
 En Keycloak, abre **Clients → vetpax-admin → Credentials** y copia el secreto **solo a la configuración privada local** descrita en el siguiente apartado.
 
-### 6.4. Crear las tres identidades para pruebas
+### 6.5. Crear las tres identidades para pruebas
 
 > **Si restauraste un respaldo completo mediante la sección 5.5, no vuelvas a crear las mismas cuentas:** ya están en Keycloak con sus identificadores originales. Este procedimiento de creación manual es para una instalación inicial sin dichos usuarios.
 
@@ -1306,6 +1376,7 @@ Pruebas adicionales recomendadas: usuarios de roles distintos (`401/403`), masco
 | `Connection refused` / `Unable to connect` | MySQL o Keycloak no está iniciado; puerto incorrecto. | `localhost:3306`, `localhost:8080`, logs Docker. |
 | `No migrations were applied` | La base ya está actualizada. | Es informativo, no un error. |
 | Swagger no autoriza / error de redirect URI | Cliente OAuth2 inexistente o callback no permitido. | `vetpax-swagger`, cliente público, PKCE S256 y `.../swagger/oauth2-redirect.html`. |
+| Angular Web muestra `Invalid parameter: redirect_uri` después de pulsar login | Falta autorizar el callback exacto en `vetpax-dev`. | **6.3**: agregar `http://localhost:4200/auth/callback` a **Valid redirect URIs**; `http://localhost:4200` a **Web origins**; guardar. |
 | `401 Unauthorized` | Token ausente, vencido, audiencia o issuer incorrectos. | Autorizar de nuevo; revisar realm `vetpax` y audiencia `vetpax-api`. |
 | `403 Forbidden` | Rol incorrecto o recurso no autorizado. | `GET /auth/me`, `/permissions`, vínculo clínica/veterinario y propiedad de mascota. |
 | `POST /clinics/{id}/veterinarians` devuelve 403 con `owner` | Estás intentando **vincular** un veterinario desde una cuenta de propietario. | Para listar usa **GET** con el mismo path; para vincular usa administrador. |

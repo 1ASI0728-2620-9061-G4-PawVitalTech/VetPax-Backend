@@ -206,7 +206,11 @@ if (app.Environment.IsDevelopment())
 }
 
 // HTTP pipeline
-app.UseHttpsRedirection();
+// HTTPS obligatorio fuera del entorno de desarrollo.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseRouting();
 
