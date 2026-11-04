@@ -12,6 +12,7 @@ using VetPax.Application.Modules.IdentityAccessManagement.UseCases.AuthenticateU
 using VetPax.Application.Modules.IdentityAccessManagement.UseCases.RegisterAccount;
 using VetPax.Domain.Modules.IdentityAccessManagement.ValueObjects;
 using Xunit;
+using Microsoft.Extensions.Configuration;
 
 namespace VetPax.Tests.Api.IdentityAccessManagement;
 
@@ -91,7 +92,8 @@ public sealed class IamApiTests
             new RegisterAccountHandler(
                 provisioning,
                 publisher),
-            new AuthenticateUserHandler(current));
+            new AuthenticateUserHandler(current),
+            Substitute.For<IConfiguration>());
 
         var result = await controller.RegisterAsync(
             new RegisterAccountRequest(
@@ -133,7 +135,8 @@ public sealed class IamApiTests
                 provisioning,
                 Substitute.For<IDomainEventPublisher>()),
             new AuthenticateUserHandler(
-                Substitute.For<IAuthenticatedUserPort>()));
+                Substitute.For<IAuthenticatedUserPort>()),
+            Substitute.For<IConfiguration>());
 
         var result = await controller.RegisterAsync(
             new RegisterAccountRequest(
@@ -167,7 +170,8 @@ public sealed class IamApiTests
             new RegisterAccountHandler(
                 Substitute.For<IIdentityProvisioningPort>(),
                 Substitute.For<IDomainEventPublisher>()),
-            new AuthenticateUserHandler(current));
+            new AuthenticateUserHandler(current),
+            Substitute.For<IConfiguration>());
 
         var result = await controller.GetMeAsync(
             CancellationToken.None);
@@ -180,4 +184,58 @@ public sealed class IamApiTests
         Assert.Equal(userId, body.UserId);
         Assert.Equal("owner", body.Role);
     }
+    
+    [Fact]
+    public void Logout_RedirectsToKeycloak()
+    {
+        // Arrange
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(
+                new Dictionary<string, string?>
+                {
+                    ["Keycloak:BaseUrl"] =
+                        "https://keycloak-production-91a6.up.railway.app",
+
+                    ["Keycloak:Realm"] = "vetpax",
+
+                    ["Swagger:OAuthClientId"] = "vetpax-dev",
+
+                    ["Swagger:PublicBaseUrl"] =
+                        "https://vetpax-api-production.up.railway.app"
+                })
+            .Build();
+
+        var controller = new AuthController(
+            new RegisterAccountHandler(
+                Substitute.For<IIdentityProvisioningPort>(),
+                Substitute.For<IDomainEventPublisher>()),
+            new AuthenticateUserHandler(
+                Substitute.For<IAuthenticatedUserPort>()),
+            configuration);
+
+        // Act
+        var result = controller.Logout();
+
+        // Assert
+        var redirect = Assert.IsType<RedirectResult>(result);
+
+        Assert.NotNull(redirect.Url);
+
+        Assert.StartsWith(
+            "https://keycloak-production-91a6.up.railway.app/realms/vetpax/protocol/openid-connect/logout",
+            redirect.Url);
+
+        Assert.Contains(
+            "client_id=vetpax-dev",
+            redirect.Url);
+
+        Assert.Contains(
+            "post_logout_redirect_uri=",
+            redirect.Url);
+
+        Assert.Contains(
+            "https://vetpax-api-production.up.railway.app/swagger/",
+            Uri.UnescapeDataString(redirect.Url));
+    }
+
 }
