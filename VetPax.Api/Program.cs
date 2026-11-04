@@ -38,6 +38,28 @@ using VetPax.Infrastructure.Modules.AdherenceGamification.Adapters;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
+//
+// CORS - Angular Web / VetPax
+//
+
+var allowedOrigins = builder.Configuration
+                         .GetSection("Cors:AllowedOrigins")
+                         .Get<string[]>()
+                     ?? Array.Empty<string>();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("VetPaxWeb", policy =>
+    {
+        policy
+            .WithOrigins(allowedOrigins)
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+
 // ============================================================
 // 1. CONTROLLERS Y JSON
 // ============================================================
@@ -293,6 +315,7 @@ app.UseStaticFiles();
 // Development: siempre habilitado.
 // Production: solamente si Swagger__Enabled=true.
 
+
 var swaggerEnabled =
     app.Environment.IsDevelopment() ||
     app.Configuration.GetValue<bool>("Swagger:Enabled");
@@ -307,11 +330,10 @@ if (swaggerEnabled)
             "/openapi/v1.json",
             "VetPax API v1"
         );
-        
-        options.InjectJavascript("/swagger-logout.js");
 
         options.OAuthClientId(
-            swaggerOAuthClientId
+            builder.Configuration["Swagger:OAuthClientId"]
+            ?? "vetpax-dev"
         );
 
         options.OAuthUsePkce();
@@ -321,8 +343,12 @@ if (swaggerEnabled)
             "profile",
             "email"
         );
+
+        // Personalizar el botón Logout de Swagger.
+        options.InjectJavascript("/swagger-logout.js");
     });
 }
+
 
 // ============================================================
 // 14. ENTITY FRAMEWORK MIGRATIONS
@@ -352,17 +378,17 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-// Necesario para el rate limiting del registro.
+// Permitir solicitudes desde Angular.
+app.UseCors("VetPaxWeb");
 
+// Rate limiting de los endpoints.
 app.UseRateLimiter();
 
-// Autenticación con JWT de Keycloak.
-
+// Autenticación JWT con Keycloak.
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Registrar endpoints de los controladores.
-
+// Endpoints de VetPax.
 app.MapControllers();
 
 app.Run();
