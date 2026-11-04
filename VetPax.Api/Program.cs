@@ -284,6 +284,8 @@ builder.Services.AddHostedService<
 
 var app = builder.Build();
 
+app.UseStaticFiles();
+
 // ============================================================
 // 13. SWAGGER / OPENAPI
 // ============================================================
@@ -305,6 +307,8 @@ if (swaggerEnabled)
             "/openapi/v1.json",
             "VetPax API v1"
         );
+        
+        options.InjectJavascript("/swagger-logout.js");
 
         options.OAuthClientId(
             swaggerOAuthClientId
