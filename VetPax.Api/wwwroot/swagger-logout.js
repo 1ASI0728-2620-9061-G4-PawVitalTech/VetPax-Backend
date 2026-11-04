@@ -2,25 +2,18 @@
 (() => {
     "use strict";
 
-    const realm = "vetpax";
-    const clientId = "vetpax-dev";
-
-    // Elegir Keycloak según dónde se abrió Swagger.
-    const isLocal = [
-        "localhost",
-        "127.0.0.1"
-    ].includes(window.location.hostname);
+    const isLocal = ["localhost", "127.0.0.1"]
+        .includes(window.location.hostname);
 
     const keycloakBaseUrl = isLocal
         ? "http://localhost:8080"
         : "https://keycloak-production-91a6.up.railway.app";
 
     const logoutUrl =
-        `${keycloakBaseUrl}/realms/${encodeURIComponent(realm)}` +
-        `/protocol/openid-connect/logout` +
-        `?client_id=${encodeURIComponent(clientId)}`;
+        `${keycloakBaseUrl}/realms/vetpax` +
+        "/protocol/openid-connect/logout" +
+        "?client_id=vetpax-dev";
 
-    // Escuchar el botón Logout del cuadro Authorize.
     document.addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) {
             return;
@@ -35,14 +28,21 @@
             return;
         }
 
-        // Abrir el logout real de Keycloak en otra pestaña.
+        // 1. Abrir el logout real de Keycloak
+        // inmediatamente, para evitar bloqueos del navegador.
         window.open(
             logoutUrl,
             "_blank",
             "noopener,noreferrer"
         );
 
-        // No detenemos el evento:
-        // Swagger también elimina su autorización local.
+        // 2. Permitir que Swagger ejecute su Logout normal.
+        // No detenemos el evento.
+
+        // 3. Reiniciar Swagger UI para eliminar también
+        // el estado OAuth2 y el código de autorización anterior.
+        window.setTimeout(() => {
+            window.location.reload();
+        }, 250);
     }, true);
 })();
