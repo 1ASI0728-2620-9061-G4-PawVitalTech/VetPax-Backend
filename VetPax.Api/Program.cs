@@ -166,8 +166,31 @@ builder.Services.AddOpenApi(options =>
                     }
                 }
             );
+            
+            // Indicar a Swagger la URL pública HTTPS de Railway.
+            // En desarrollo local se mantiene la URL automática.
+            var publicApiUrl =
+                builder.Configuration["Swagger:PublicBaseUrl"];
+
+            if (!builder.Environment.IsDevelopment() &&
+                Uri.TryCreate(
+                    publicApiUrl,
+                    UriKind.Absolute,
+                    out var publicUri) &&
+                publicUri.Scheme == Uri.UriSchemeHttps)
+            {
+                document.Servers = new List<OpenApiServer>
+                {
+                    new()
+                    {
+                        Url = publicUri.GetLeftPart(
+                            UriPartial.Authority)
+                    }
+                };
+            }
 
             return Task.CompletedTask;
+            
         }
     );
 });
