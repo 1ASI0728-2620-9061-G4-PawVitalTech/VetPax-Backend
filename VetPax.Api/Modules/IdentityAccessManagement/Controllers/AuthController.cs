@@ -16,13 +16,17 @@ public sealed class AuthController : ControllerBase
 {
     private readonly RegisterAccountHandler _register;
     private readonly AuthenticateUserHandler _authenticate;
+    private readonly IConfiguration _configuration;
+
 
     public AuthController(
         RegisterAccountHandler register,
-        AuthenticateUserHandler authenticate)
+        AuthenticateUserHandler authenticate,
+        IConfiguration configuration)
     {
         _register = register;
         _authenticate = authenticate;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -122,4 +126,45 @@ public sealed class AuthController : ControllerBase
         return Ok(
             AuthenticatedUserResponse.From(result));
     }
+    
+    /// <summary>
+    /// Redirects Swagger users to Keycloak logout.
+    /// </summary>
+    [HttpGet("logout")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public IActionResult Logout()
+    {
+        var baseUrl = _configuration["Keycloak:BaseUrl"]
+            ?.TrimEnd('/');
+
+        var realm = _configuration["Keycloak:Realm"];
+
+        var clientId = _configuration["Swagger:OAuthClientId"]
+                       ?? "vetpax-dev";
+
+        var publicBaseUrl = _configuration["Swagger:PublicBaseUrl"]
+            ?.TrimEnd('/');
+
+        if (string.IsNullOrWhiteSpace(baseUrl) ||
+            string.IsNullOrWhiteSpace(realm) ||
+            string.IsNullOrWhiteSpace(publicBaseUrl))
+        {
+            return Problem(
+                statusCode: 500,
+                title: "Logout configuration is incomplete"
+            );
+        }
+
+        var returnUrl = $"{publicBaseUrl}/swagger/";
+
+        var logoutUrl =
+            $"{baseUrl}/realms/{Uri.EscapeDataString(realm)}" +
+            "/protocol/openid-connect/logout" +
+            $"?client_id={Uri.EscapeDataString(clientId)}" +
+            $"&post_logout_redirect_uri={Uri.EscapeDataString(returnUrl)}";
+
+        return Redirect(logoutUrl);
+    }
+
 }
