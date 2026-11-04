@@ -3,3 +3,13 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+# Rider
+.idea/
+
+# Keycloak - archivos privados
+infra/keycloak/.env
+infra/keycloak/backup/
+infra/keycloak/import/
+
+# Secretos
+*.dump
