@@ -18,7 +18,6 @@ public sealed class AuthController : ControllerBase
     private readonly AuthenticateUserHandler _authenticate;
     private readonly IConfiguration _configuration;
 
-
     public AuthController(
         RegisterAccountHandler register,
         AuthenticateUserHandler authenticate,
@@ -127,15 +126,19 @@ public sealed class AuthController : ControllerBase
             AuthenticatedUserResponse.From(result));
     }
     
+
     /// <summary>
-    /// Redirects Swagger users to Keycloak logout.
+    /// Redirects the browser to Keycloak to end the SSO session.
     /// </summary>
     [HttpGet("logout")]
     [AllowAnonymous]
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [ProducesResponseType(StatusCodes.Status302Found)]
+    [ProducesResponseType(
+        typeof(ProblemDetails),
+        StatusCodes.Status500InternalServerError)]
     public IActionResult Logout()
     {
-        var baseUrl = _configuration["Keycloak:BaseUrl"]
+        var keycloakBaseUrl = _configuration["Keycloak:BaseUrl"]
             ?.TrimEnd('/');
 
         var realm = _configuration["Keycloak:Realm"];
@@ -146,25 +149,38 @@ public sealed class AuthController : ControllerBase
         var publicBaseUrl = _configuration["Swagger:PublicBaseUrl"]
             ?.TrimEnd('/');
 
-        if (string.IsNullOrWhiteSpace(baseUrl) ||
-            string.IsNullOrWhiteSpace(realm) ||
-            string.IsNullOrWhiteSpace(publicBaseUrl))
+        if (string.IsNullOrWhiteSpace(keycloakBaseUrl) ||
+            string.IsNullOrWhiteSpace(realm))
         {
             return Problem(
                 statusCode: 500,
-                title: "Logout configuration is incomplete"
+                title: "Keycloak logout configuration is incomplete"
             );
+        }
+
+        // Railway: utilizar la URL pública configurada.
+        // Local: utilizar el origen de la solicitud.
+        if (string.IsNullOrWhiteSpace(publicBaseUrl))
+        {
+            publicBaseUrl =
+                $"{Request.Scheme}://{Request.Host}";
         }
 
         var returnUrl = $"{publicBaseUrl}/swagger/";
 
+        var query =
+            $"client_id={Uri.EscapeDataString(clientId)}" +
+            $"&post_logout_redirect_uri=" +
+            Uri.EscapeDataString(returnUrl);
+
         var logoutUrl =
-            $"{baseUrl}/realms/{Uri.EscapeDataString(realm)}" +
-            "/protocol/openid-connect/logout" +
-            $"?client_id={Uri.EscapeDataString(clientId)}" +
-            $"&post_logout_redirect_uri={Uri.EscapeDataString(returnUrl)}";
+            $"{keycloakBaseUrl}/realms/" +
+            $"{Uri.EscapeDataString(realm)}" +
+            "/protocol/openid-connect/logout?" +
+            query;
 
         return Redirect(logoutUrl);
     }
+
 
 }
