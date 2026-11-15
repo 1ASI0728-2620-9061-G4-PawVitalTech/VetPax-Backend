@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<RegisterPetHandler>();
         services.AddScoped<GetPetHandler>();
         services.AddScoped<GetClinicalHistoryHandler>();
+        services.AddScoped<GetVeterinarianClinicalHistoryHandler>();
         services.AddScoped<RegisterClinicalAttentionHandler>();
         services.AddScoped<GetClinicalEvolutionHandler>();
 
