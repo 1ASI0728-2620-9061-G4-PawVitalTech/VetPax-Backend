@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddScoped<GetActiveFeedingPlanHandler>();
         services.AddScoped<ConfigureFeedingRemindersHandler>();
         services.AddScoped<GenerateFeedingRemindersHandler>();
+        services.AddScoped<GetClinicFeedingPlansHandler>();
 
         return services;
     }

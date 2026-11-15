@@ -75,8 +75,9 @@ public sealed class GetClinicalEvolutionHandler
                 "Clinical record not found.");
         }
 
-        var evolution = _evolutionService.BuildEvolution(
-            record);
+        var evolution = _evolutionService.BuildEvolutionForClinic(
+            record,
+            clinicId);
 
         return new GetClinicalEvolutionResult(
             evolution.PetId.Value,

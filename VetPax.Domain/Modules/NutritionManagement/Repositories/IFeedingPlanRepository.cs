@@ -16,4 +16,9 @@ public interface IFeedingPlanRepository
     Task SaveAsync(
         FeedingPlan plan,
         CancellationToken cancellationToken = default);
+    
+    Task<IReadOnlyList<FeedingPlan>> ListByPetAndClinicAsync(
+        Guid petId,
+        Guid clinicId,
+        CancellationToken cancellationToken = default);
 }
