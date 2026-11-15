@@ -69,6 +69,7 @@ public sealed class GetVeterinarianClinicalHistoryHandler
             return null;
 
         var attentions = record.GetAttentionsChronologically()
+            .Where(a => a.ClinicId.Value == clinicId.Value)
             .Select(a => new ClinicalAttentionResult(
                 a.AttentionId.Value,
                 a.ClinicId.Value,

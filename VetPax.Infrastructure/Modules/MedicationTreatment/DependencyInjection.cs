@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using VetPax.Infrastructure.Modules.MedicationTreatment.Notifications;
 using VetPax.Application.Modules.MedicationTreatment.Ports;
 using VetPax.Application.Modules.MedicationTreatment.Services;
-
+using VetPax.Application.Modules.MedicationTreatment.UseCases.GetClinicMedicationPlans;
 using VetPax.Application.Modules.MedicationTreatment.UseCases.CreateMedicationPlan;
 using VetPax.Application.Modules.MedicationTreatment.UseCases.UpdateMedicationPlan;
 using VetPax.Application.Modules.MedicationTreatment.UseCases.GetMedicationPlans;
@@ -147,6 +147,8 @@ public static class DependencyInjection
 
         // Procesador de recordatorios
         services.AddScoped<MedicationReminderProcessor>();
+        
+        services.AddScoped<GetClinicMedicationPlansHandler>();
 
         return services;
     }

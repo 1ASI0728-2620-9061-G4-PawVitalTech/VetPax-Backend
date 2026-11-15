@@ -8,6 +8,7 @@ public sealed class ClinicalEvolutionService
     public ClinicalEvolution BuildEvolution(
         ClinicalRecord record)
     {
+        
         ArgumentNullException.ThrowIfNull(record);
 
         var entries = record
@@ -42,4 +43,45 @@ public sealed class ClinicalEvolutionService
             comparableEntries
         );
     }
+    
+    public ClinicalEvolution BuildEvolutionForClinic(
+        ClinicalRecord record,
+        ClinicId clinicId)
+    {
+        ArgumentNullException.ThrowIfNull(record);
+
+        if (clinicId.Value == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A valid clinic ID is required.");
+        }
+
+        var entries = record
+            .GetAttentionsChronologically()
+
+            // Solo atenciones de esta clínica.
+            .Where(attention =>
+                attention.ClinicId.Value == clinicId.Value)
+
+            // Extraer los indicadores de cada atención.
+            .SelectMany(attention =>
+                attention.Indicators.Select(indicator =>
+                    new EvolutionEntry(
+                        attention.AttentionDate,
+                        indicator.Name,
+                        indicator.Value,
+                        indicator.Unit
+                    )
+                )
+            )
+
+            .OrderBy(entry => entry.AttentionDate)
+            .ToArray();
+
+        return new ClinicalEvolution(
+            record.PetId,
+            entries
+        );
+    }
+
 }
