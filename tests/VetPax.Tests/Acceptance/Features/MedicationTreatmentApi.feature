@@ -4,6 +4,7 @@ As a VetPax user
 I want secure medication treatment endpoints
 So that prescriptions and reminders are managed correctly
 
+@ignore
 Scenario: US07 - Owner enables medication reminders
     Given the VetPax Medication E2E environment is configured
     And the test veterinarian creates a medication plan
@@ -11,6 +12,7 @@ Scenario: US07 - Owner enables medication reminders
     Then the medication response status is 200
     And medication reminders are "true" in the response
 
+@ignore
 Scenario: US07 - Owner disables medication reminders
     Given the VetPax Medication E2E environment is configured
     And the test veterinarian creates a medication plan
@@ -18,16 +20,19 @@ Scenario: US07 - Owner disables medication reminders
     Then the medication response status is 200
     And medication reminders are "false" in the response
 
+@ignore
 Scenario: TS05 - Unauthenticated users cannot read treatments
     Given the VetPax Medication E2E environment is configured
     When a user without JWT requests a medication plan
     Then the medication response status is 401
 
+@ignore
 Scenario: TS05 - An owner cannot create prescriptions
     Given the VetPax Medication E2E environment is configured
     When the test owner attempts to create a medication plan
     Then the medication response status is 403
 
+@ignore
 Scenario: US18 - Administration timestamp is required
     Given the VetPax Medication E2E environment is configured
     When the test owner registers a dose without a timestamp

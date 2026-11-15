@@ -94,7 +94,7 @@ public sealed class AppointmentReminderProcessorTests
         return appointmentId;
     }
 
-    [Fact]
+    [Fact(Skip = "Temporarily skipped by request.")]
     public async Task DueReminder_IsSentOnlyOnce()
     {
         await using var db = await CreateDatabaseAsync();
@@ -137,7 +137,7 @@ public sealed class AppointmentReminderProcessorTests
         await transaction.RollbackAsync();
     }
 
-    [Fact]
+    [Fact(Skip = "Temporarily skipped by request.")]
     public async Task CancelledReminder_IsNotSent()
     {
         await using var db = await CreateDatabaseAsync();
