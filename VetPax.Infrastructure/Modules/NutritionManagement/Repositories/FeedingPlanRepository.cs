@@ -305,4 +305,35 @@ public sealed class FeedingPlanRepository : IFeedingPlanRepository
             value,
             DateTimeKind.Utc);
     }
+    
+    public async Task<IReadOnlyList<FeedingPlan>>
+        ListByPetAndClinicAsync(
+            Guid petId,
+            Guid clinicId,
+            CancellationToken cancellationToken = default)
+    {
+        var planIds = await _db.Set<FeedingPlanRow>()
+            .AsNoTracking()
+            .Where(row =>
+                row.PetId == petId &&
+                row.ClinicId == clinicId)
+            .OrderByDescending(row => row.CreatedAtUtc)
+            .Select(row => row.PlanId)
+            .ToListAsync(cancellationToken);
+
+        var plans = new List<FeedingPlan>();
+
+        foreach (var planId in planIds)
+        {
+            var plan = await FindByIdAsync(
+                new FeedingPlanId(planId),
+                cancellationToken);
+
+            if (plan is not null)
+                plans.Add(plan);
+        }
+
+        return plans;
+    }
+
 }

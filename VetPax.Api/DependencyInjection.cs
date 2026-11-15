@@ -12,6 +12,7 @@ using VetPax.Infrastructure.Messaging;
 using VetPax.Infrastructure.Persistence;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Repositories;
 using VetPax.Infrastructure.Modules.PetClinicalCare.Adapters;
+using VetPax.Application.Modules.PetClinicalCare.UseCases.GetVeterinarianPatient;
 
 namespace VetPax.Api;
 
@@ -32,7 +33,7 @@ public static class DependencyInjection
         // Domain Services
         services.AddScoped<ClinicalAccessPolicy>();
         services.AddScoped<ClinicalEvolutionService>();
-
+        services.AddScoped<GetVeterinarianPatientHandler>();
         // Application Handlers
         services.AddScoped<RegisterPetHandler>();
         services.AddScoped<GetPetHandler>();
