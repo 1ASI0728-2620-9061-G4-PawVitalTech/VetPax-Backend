@@ -52,7 +52,7 @@ public sealed class AppointmentsController : ControllerBase
     // -------------------------------------------------
 
     [HttpPost]
-    [Authorize(Roles = "owner")]
+    [Authorize(Roles = "owner,veterinarian")]
     [ProducesResponseType(
         typeof(AppointmentResponse),
         StatusCodes.Status201Created)]
@@ -195,7 +195,7 @@ public sealed class AppointmentsController : ControllerBase
         });
     }
     [HttpGet("availability")]
-    [Authorize(Roles = "owner")]
+    [Authorize(Roles = "owner,veterinarian")]
     [ProducesResponseType(
         typeof(AvailableSlotsData),
         StatusCodes.Status200OK)]

@@ -10,6 +10,11 @@ public interface IAppointmentPatientPort
         Guid clinicId,
         CancellationToken cancellationToken = default);
 
+    Task<Guid?> GetOwnerIdIfLinkedAsync(
+        Guid petId,
+        Guid clinicId,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyDictionary<Guid, AppointmentPatientSummary>>
         GetSummariesAsync(
             IReadOnlyCollection<Guid> petIds,

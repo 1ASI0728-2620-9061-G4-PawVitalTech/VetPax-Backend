@@ -5,10 +5,12 @@ using VetPax.Application.Modules.AppointmentManagement.Ports;
 using VetPax.Application.Modules.AppointmentManagement.Services;
 using VetPax.Domain.Modules.AppointmentManagement.Repositories;
 using VetPax.Domain.Modules.AppointmentManagement.ValueObjects;
+using VetPax.Domain.Modules.IdentityAccessManagement.ValueObjects;
 
 namespace VetPax.Application.Modules.AppointmentManagement.UseCases.CancelAppointment;
 
-public sealed record CancelAppointmentCommand(Guid AppointmentId);
+public sealed record CancelAppointmentCommand(
+    Guid AppointmentId);
 
 public sealed class CancelAppointmentHandler
 {
@@ -41,25 +43,63 @@ public sealed class CancelAppointmentHandler
                 "A valid appointment ID is required.");
         }
 
-        var ownerId = await _access.RequireOwnerAsync(
-            cancellationToken);
+        // 1. Obtener usuario autenticado.
+        var identity =
+            await _access.RequireOwnerOrVeterinarianAsync(
+                cancellationToken);
 
+        // 2. Buscar cita.
         var appointment = await _appointments.FindByIdAsync(
             new AppointmentId(command.AppointmentId),
             cancellationToken)
             ?? throw new KeyNotFoundException(
                 "Appointment not found.");
 
-        AppointmentAccessService.EnsureOwnedBy(
-            appointment,
-            ownerId);
+        // 3. Autorizar según rol.
+        if (identity.Role == UserRole.Owner)
+        {
+            var ownerId = new AppointmentOwnerId(
+                identity.UserId.Value);
 
+            // El propietario solo cancela sus citas.
+            AppointmentAccessService.EnsureOwnedBy(
+                appointment,
+                ownerId);
+        }
+        else if (identity.Role == UserRole.Veterinarian)
+        {
+            var veterinarianId =
+                new AppointmentVeterinarianId(
+                    identity.UserId.Value);
+
+            // Solo puede cancelar sus citas asignadas.
+            if (!appointment.IsAssignedTo(veterinarianId))
+            {
+                throw new UnauthorizedAccessException(
+                    "Appointment is not assigned to this veterinarian.");
+            }
+
+            // Debe estar activo en esa clínica.
+            await _access.EnsureActiveVeterinarianAsync(
+                veterinarianId,
+                appointment.ClinicId,
+                cancellationToken);
+        }
+        else
+        {
+            throw new UnauthorizedAccessException(
+                "Role is not authorized.");
+        }
+
+        // 4. El dominio permite cancelar solo citas pendientes.
         appointment.Cancel(_access.UtcNow);
 
+        // 5. Persistir cambios.
         await _appointments.SaveAsync(
             appointment,
             cancellationToken);
 
+        // 6. Registrar evento y notificaciones.
         await _notifications.StageChangesAsync(
             appointment,
             AppointmentNotificationAction.Cancel,

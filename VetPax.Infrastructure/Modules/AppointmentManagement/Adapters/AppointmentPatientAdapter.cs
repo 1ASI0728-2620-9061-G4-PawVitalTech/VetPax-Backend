@@ -86,4 +86,36 @@ public sealed class AppointmentPatientAdapter
 
         return result;
     }
+    
+    public async Task<Guid?> GetOwnerIdIfLinkedAsync(
+        Guid petId,
+        Guid clinicId,
+        CancellationToken cancellationToken = default)
+    {
+        if (petId == Guid.Empty || clinicId == Guid.Empty)
+            return null;
+
+        // Verificar que el paciente esté vinculado a la clínica.
+        var linked = await _db.PetClinicLinks
+            .AsNoTracking()
+            .AnyAsync(
+                link =>
+                    link.PetId == petId &&
+                    link.ClinicId == clinicId &&
+                    link.IsActive,
+                cancellationToken);
+
+        if (!linked)
+            return null;
+
+        // Consultar la mascota y obtener su propietario real.
+        var pet = await _db.Pets
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                p => p.PetId == new PetId(petId),
+                cancellationToken);
+
+        return pet?.OwnerId.Value;
+    }
+
 }

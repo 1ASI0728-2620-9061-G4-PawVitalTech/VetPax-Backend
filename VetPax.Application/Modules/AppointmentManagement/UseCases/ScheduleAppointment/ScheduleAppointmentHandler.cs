@@ -7,6 +7,7 @@ using VetPax.Application.Modules.AppointmentManagement.Services;
 using VetPax.Domain.Modules.AppointmentManagement.Aggregates;
 using VetPax.Domain.Modules.AppointmentManagement.Repositories;
 using VetPax.Domain.Modules.AppointmentManagement.ValueObjects;
+using VetPax.Domain.Modules.IdentityAccessManagement.ValueObjects;
 
 namespace VetPax.Application.Modules.AppointmentManagement.UseCases.ScheduleAppointment;
 
@@ -51,18 +52,63 @@ public sealed class ScheduleAppointmentHandler
                 "Valid pet, clinic and veterinarian IDs are required.");
         }
 
-        var ownerId = await _access.RequireOwnerAsync(
-            cancellationToken);
+        // 1. Identificar al usuario autenticado.
+        var identity =
+            await _access.RequireOwnerOrVeterinarianAsync(
+                cancellationToken);
 
         var petId = new AppointmentPetId(command.PetId);
         var clinicId = new AppointmentClinicId(command.ClinicId);
         var veterinarianId =
             new AppointmentVeterinarianId(command.VeterinarianId);
 
+        AppointmentOwnerId ownerId;
+
+        // 2. Resolver permisos según el rol.
+        if (identity.Role == UserRole.Owner)
+        {
+            // El propietario puede agendar para sus mascotas.
+            ownerId = new AppointmentOwnerId(
+                identity.UserId.Value);
+        }
+        else if (identity.Role == UserRole.Veterinarian)
+        {
+            // El veterinario solo puede agendar para sí mismo.
+            var currentVeterinarianId =
+                new AppointmentVeterinarianId(
+                    identity.UserId.Value);
+
+            if (currentVeterinarianId != veterinarianId)
+            {
+                throw new UnauthorizedAccessException(
+                    "Cannot schedule for another veterinarian.");
+            }
+
+            // Debe pertenecer activamente a la clínica.
+            await _access.EnsureActiveVeterinarianAsync(
+                currentVeterinarianId,
+                clinicId,
+                cancellationToken);
+
+            // Buscar propietario real del paciente.
+            ownerId = await _access.RequireLinkedPatientOwnerAsync(
+                petId,
+                clinicId,
+                cancellationToken);
+        }
+        else
+        {
+            throw new UnauthorizedAccessException(
+                "Role is not authorized.");
+        }
+
+        // 3. Construir el horario.
         var slot = new AppointmentSlot(
             command.Date,
             command.StartTime);
 
+        // 4. Validar fecha futura, vinculación,
+        // veterinario activo y horario de clínica.
         await _access.EnsureCanBookAsync(
             ownerId,
             petId,
@@ -71,6 +117,7 @@ public sealed class ScheduleAppointmentHandler
             slot,
             cancellationToken);
 
+        // 5. Comprobar que no haya otra cita en ese horario.
         var occupied = await _appointments.HasOverlapAsync(
             veterinarianId,
             slot,
@@ -83,6 +130,7 @@ public sealed class ScheduleAppointmentHandler
                 "The selected appointment slot is unavailable.");
         }
 
+        // 6. Crear la cita.
         var appointment = Appointment.Schedule(
             ownerId,
             petId,
@@ -92,10 +140,12 @@ public sealed class ScheduleAppointmentHandler
             command.Reason,
             _access.UtcNow);
 
+        // 7. Persistir cambios.
         await _appointments.SaveAsync(
             appointment,
             cancellationToken);
 
+        // 8. Registrar eventos y notificaciones.
         await _notifications.StageChangesAsync(
             appointment,
             AppointmentNotificationAction.Schedule,
