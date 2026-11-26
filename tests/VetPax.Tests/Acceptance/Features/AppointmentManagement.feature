@@ -23,9 +23,9 @@ Característica: US04 US05 US06 - Gestión de citas veterinarias
     Cuando otro propietario intenta agendar una cita
     Entonces el código HTTP de citas es 403
 
-  Escenario: US04 - Un veterinario no puede agendar como propietario
-    Cuando un veterinario intenta agendar una cita
-    Entonces el código HTTP de citas es 403
+Escenario: US04 - Veterinario agenda una cita para un paciente vinculado
+  Cuando un veterinario intenta agendar una cita
+  Entonces el código HTTP de citas es 201
 
   Escenario: US05 - Propietario reprograma una cita pendiente
     Dado que existe una cita pendiente a las 09:00

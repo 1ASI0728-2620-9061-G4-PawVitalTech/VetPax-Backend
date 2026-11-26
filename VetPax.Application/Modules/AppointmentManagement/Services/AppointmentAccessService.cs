@@ -153,4 +153,52 @@ public sealed class AppointmentAccessService
                 "Appointment must be scheduled in the future.");
         }
     }
+    
+    public async Task<AuthenticatedIdentity>
+        RequireOwnerOrVeterinarianAsync(
+            CancellationToken cancellationToken = default)
+    {
+        var identity = await _currentUser.GetCurrentAsync(
+            cancellationToken);
+
+        if (identity is null ||
+            identity.UserId.Value == Guid.Empty ||
+            (identity.Role != UserRole.Owner &&
+             identity.Role != UserRole.Veterinarian))
+        {
+            throw new UnauthorizedAccessException(
+                "Authenticated owner or veterinarian required.");
+        }
+
+        return identity;
+    }
+    
+    public async Task<AppointmentOwnerId>
+        RequireLinkedPatientOwnerAsync(
+            AppointmentPetId petId,
+            AppointmentClinicId clinicId,
+            CancellationToken cancellationToken = default)
+    {
+        if (petId.Value == Guid.Empty ||
+            clinicId.Value == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "Valid pet and clinic IDs are required.");
+        }
+
+        var ownerId = await _patients.GetOwnerIdIfLinkedAsync(
+            petId.Value,
+            clinicId.Value,
+            cancellationToken);
+
+        if (!ownerId.HasValue || ownerId.Value == Guid.Empty)
+        {
+            throw new UnauthorizedAccessException(
+                "Pet does not exist or is not linked to this clinic.");
+        }
+
+        return new AppointmentOwnerId(ownerId.Value);
+    }
+
+
 }
