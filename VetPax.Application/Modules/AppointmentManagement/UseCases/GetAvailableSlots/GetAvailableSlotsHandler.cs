@@ -1,8 +1,10 @@
-﻿using VetPax.Application.Modules.AppointmentManagement.Ports;
+﻿
+using VetPax.Application.Modules.AppointmentManagement.Ports;
 using VetPax.Application.Modules.AppointmentManagement.Services;
 using VetPax.Domain.Modules.AppointmentManagement.Enums;
 using VetPax.Domain.Modules.AppointmentManagement.Repositories;
 using VetPax.Domain.Modules.AppointmentManagement.ValueObjects;
+using VetPax.Domain.Modules.IdentityAccessManagement.ValueObjects;
 
 namespace VetPax.Application.Modules.AppointmentManagement.UseCases.GetAvailableSlots;
 
@@ -42,8 +44,10 @@ public sealed class GetAvailableSlotsHandler(
                 "clinicId, veterinarianId and date are required.");
         }
 
-        // Solo propietarios pueden consultar la disponibilidad.
-        await access.RequireOwnerAsync(cancellationToken);
+        // 1. Permitir propietario o veterinario.
+        var identity =
+            await access.RequireOwnerOrVeterinarianAsync(
+                cancellationToken);
 
         var veterinarianId =
             new AppointmentVeterinarianId(query.VeterinarianId);
@@ -51,32 +55,42 @@ public sealed class GetAvailableSlotsHandler(
         var clinicId =
             new AppointmentClinicId(query.ClinicId);
 
-        // Comprobar que el veterinario esté vinculado a la clínica.
+        // 2. El veterinario consulta su propia disponibilidad.
+        // El propietario puede consultar la disponibilidad
+        // de los veterinarios activos de la clínica.
+        if (identity.Role == UserRole.Veterinarian &&
+            identity.UserId.Value != veterinarianId.Value)
+        {
+            throw new UnauthorizedAccessException(
+                "Cannot query another veterinarian's availability.");
+        }
+
+        // 3. Verificar que el veterinario esté activo.
         await access.EnsureActiveVeterinarianAsync(
             veterinarianId,
             clinicId,
             cancellationToken);
 
-        // Obtener los horarios de apertura de la clínica.
+        // 4. Obtener horarios de apertura.
         var intervals = await clinics.GetOpeningIntervalsAsync(
             query.ClinicId,
             query.Date.DayOfWeek,
             cancellationToken);
 
-        // Buscar citas del veterinario en todas sus clínicas.
+        // 5. Buscar citas del veterinario.
         var appointmentsForDay = await appointments.FindAgendaAsync(
             veterinarianId,
             query.Date,
             query.Date,
             cancellationToken);
 
-        // Las citas canceladas no bloquean horarios.
+        // Las citas canceladas no ocupan horarios.
         var occupied = appointmentsForDay
             .Where(a => a.Status != AppointmentStatus.Cancelled)
             .Select(a => a.Slot)
             .ToArray();
 
-        // Hora local de Lima, coherente con AppointmentAccessService.
+        // Hora local de Perú.
         var localNow = access.UtcNow.AddHours(-5);
 
         var durationTicks = TimeSpan
@@ -87,7 +101,7 @@ public sealed class GetAvailableSlotsHandler(
 
         foreach (var interval in intervals)
         {
-            // Alinear el inicio a bloques de 30 minutos.
+            // Alinear horarios a bloques de 30 minutos.
             var first =
                 ((interval.OpenTime.Ticks + durationTicks - 1)
                  / durationTicks) * durationTicks;
@@ -102,7 +116,7 @@ public sealed class GetAvailableSlotsHandler(
                     query.Date,
                     start);
 
-                // No ofrecer citas en el pasado.
+                // No ofrecer fechas y horas pasadas.
                 if (query.Date.ToDateTime(start) <= localNow)
                     continue;
 
