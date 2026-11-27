@@ -7,11 +7,12 @@ using VetPax.Application.Modules.PetClinicalCare.UseCases.GetPet;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterPet;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetMyPets;
+using VetPax.Domain.Modules.IdentityAccessManagement.ValueObjects;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
 [ApiController]
-[Authorize(Roles = "owner")]
+[Authorize]
 [Route("api/v1/pets")]
 public sealed class PetsController : ControllerBase
 {
@@ -33,6 +34,7 @@ public sealed class PetsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "owner")]
     [ProducesResponseType(
         typeof(RegisterPetResponse),
         StatusCodes.Status201Created)]
@@ -89,6 +91,7 @@ public sealed class PetsController : ControllerBase
         }
     }
     [HttpGet]
+    [Authorize(Roles = "owner")]
     [ProducesResponseType(
         typeof(IReadOnlyList<PetResponse>),
         StatusCodes.Status200OK)]
@@ -124,6 +127,7 @@ public sealed class PetsController : ControllerBase
     }
 
     [HttpGet("{petId:guid}")]
+    [Authorize(Roles = "owner,veterinarian")]
     [ProducesResponseType(
         typeof(PetResponse),
         StatusCodes.Status200OK)]
@@ -149,15 +153,25 @@ public sealed class PetsController : ControllerBase
 
         try
         {
-            var query = new GetPetQuery(
-                new PetId(petId),
-                new OwnerId(identity.UserId.Value)
-            );
+            var result = identity.Role switch
+            {
+                UserRole.Owner =>
+                    await _getPetHandler.HandleAsync(
+                        new GetPetQuery(
+                            new PetId(petId),
+                            new OwnerId(identity.UserId.Value)),
+                        cancellationToken),
+                UserRole.Veterinarian =>
+                    await _getPetHandler.HandleForVeterinarianAsync(
+                        new PetId(petId),
+                        identity.UserId.Value,
+                        cancellationToken),
+                _ => null
+            };
 
-            var result = await _getPetHandler.HandleAsync(
-                query,
-                cancellationToken
-            );
+            if (identity.Role is not
+                (UserRole.Owner or UserRole.Veterinarian))
+                return Forbid();
 
             if (result is null)
                 return NotFound(new

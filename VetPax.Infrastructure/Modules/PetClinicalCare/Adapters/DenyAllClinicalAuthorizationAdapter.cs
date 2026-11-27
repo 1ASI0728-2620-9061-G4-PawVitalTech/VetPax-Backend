@@ -27,4 +27,14 @@ public sealed class DenyAllClinicalAuthorizationAdapter
 
         return Task.FromResult(false);
     }
+
+    public Task<bool> CanViewPetAsync(
+        Guid userId,
+        PetId petId,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return Task.FromResult(false);
+    }
 }
