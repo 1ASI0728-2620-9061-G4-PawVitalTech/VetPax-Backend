@@ -9,6 +9,7 @@ using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.RegisterClinicalAttention;
 using VetPax.Domain.Modules.PetClinicalCare.ValueObjects;
 using VetPax.Application.Modules.PetClinicalCare.Ports;
+using VetPax.Api.Realtime;
 
 namespace VetPax.Api.Modules.PetClinicalCare.Controllers;
 
@@ -19,15 +20,18 @@ public sealed class ClinicalRecordsController : ControllerBase
     private readonly GetClinicalHistoryHandler _handler;
     private readonly RegisterClinicalAttentionHandler _registerHandler;
     private readonly IAuthenticatedUserPort _currentUser;
+    private readonly RealtimeWebSocketManager? _realtime;
 
     public ClinicalRecordsController(
         GetClinicalHistoryHandler handler,
         RegisterClinicalAttentionHandler registerHandler,
-        IAuthenticatedUserPort currentUser)
+        IAuthenticatedUserPort currentUser,
+        RealtimeWebSocketManager? realtime = null)
     {
         _handler = handler;
         _registerHandler = registerHandler;
         _currentUser = currentUser;
+        _realtime = realtime;
     }
 
     [HttpGet]
@@ -158,6 +162,12 @@ public sealed class ClinicalRecordsController : ControllerBase
                 : await _registerHandler.HandleAsync(
                     command,
                     cancellationToken);
+
+            if (_realtime is not null)
+            {
+                await _realtime.PublishAsync(
+                    RealtimeEvent.Create("clinical.attention.created"));
+            }
 
             return Created(
                 $"/api/v1/pets/{petId}/clinical-records",

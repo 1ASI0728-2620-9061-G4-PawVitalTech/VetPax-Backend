@@ -76,6 +76,18 @@ public static class DependencyInjection
 
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.HttpContext.Request.Path.StartsWithSegments(
+                                "/ws/updates") &&
+                            context.HttpContext.Request.Query.TryGetValue(
+                                "access_token", out var token))
+                        {
+                            context.Token = token.ToString();
+                        }
+
+                        return Task.CompletedTask;
+                    },
                     OnTokenValidated = context =>
                     {
                         var raw = context.Principal?

@@ -13,6 +13,7 @@ using VetPax.Application.Modules.AppointmentManagement.UseCases.RescheduleAppoin
 using VetPax.Application.Modules.AppointmentManagement.UseCases.ScheduleAppointment;
 using VetPax.Domain.Modules.AppointmentManagement.Exceptions;
 using VetPax.Application.Modules.AppointmentManagement.UseCases.GetAvailableSlots;
+using VetPax.Api.Realtime;
 
 namespace VetPax.Api.Modules.AppointmentManagement.Controllers;
 
@@ -28,6 +29,7 @@ public sealed class AppointmentsController : ControllerBase
     private readonly GetVeterinarianAgendaHandler _agenda;
     private readonly GetAppointmentHandler _get;
     private readonly GetAvailableSlotsHandler _availability;
+    private readonly RealtimeWebSocketManager? _realtime;
 
     public AppointmentsController(
         ScheduleAppointmentHandler schedule,
@@ -36,7 +38,8 @@ public sealed class AppointmentsController : ControllerBase
         MarkAppointmentAttendedHandler attend,
         GetVeterinarianAgendaHandler agenda,
         GetAppointmentHandler get,
-        GetAvailableSlotsHandler availability)
+        GetAvailableSlotsHandler availability,
+        RealtimeWebSocketManager? realtime = null)
     {
         _schedule = schedule;
         _reschedule = reschedule;
@@ -45,6 +48,7 @@ public sealed class AppointmentsController : ControllerBase
         _agenda = agenda;
         _get = get;
         _availability = availability;
+        _realtime = realtime;
     }
 
     // -------------------------------------------------
@@ -78,6 +82,12 @@ public sealed class AppointmentsController : ControllerBase
             var result = await _schedule.HandleAsync(
                 command,
                 cancellationToken);
+
+            if (_realtime is not null)
+            {
+                await _realtime.PublishAsync(
+                    RealtimeEvent.Create("appointment.updated"));
+            }
 
             return CreatedAtAction(
                 nameof(GetById),
@@ -133,6 +143,12 @@ public sealed class AppointmentsController : ControllerBase
                             appointmentId),
                         cancellationToken);
 
+                    if (_realtime is not null)
+                    {
+                        await _realtime.PublishAsync(
+                            RealtimeEvent.Create("appointment.updated"));
+                    }
+
                     return Ok(
                         AppointmentResponse.From(result));
                 }
@@ -157,6 +173,12 @@ public sealed class AppointmentsController : ControllerBase
                             request.StartTime.Value),
                         cancellationToken);
 
+                    if (_realtime is not null)
+                    {
+                        await _realtime.PublishAsync(
+                            RealtimeEvent.Create("appointment.updated"));
+                    }
+
                     return Ok(
                         AppointmentResponse.From(result));
                 }
@@ -179,6 +201,12 @@ public sealed class AppointmentsController : ControllerBase
                             appointmentId,
                             request.ClinicalAttentionId.Value),
                         cancellationToken);
+
+                    if (_realtime is not null)
+                    {
+                        await _realtime.PublishAsync(
+                            RealtimeEvent.Create("appointment.updated"));
+                    }
 
                     return Ok(
                         AppointmentResponse.From(result));
