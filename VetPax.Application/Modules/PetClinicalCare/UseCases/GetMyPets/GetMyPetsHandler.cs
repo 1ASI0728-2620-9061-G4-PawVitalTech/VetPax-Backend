@@ -28,7 +28,12 @@ public sealed class GetMyPetsHandler(IPetRepository pets)
                 p.BirthDate,
                 p.Breed,
                 p.Sex,
-                p.RegisteredAt))
+                p.RegisteredAt,
+                p.TutorName,
+                p.MicrochipNumber,
+                p.InsuranceProvider,
+                p.PolicyNumber,
+                p.PhotoUrl))
             .ToArray();
     }
 }

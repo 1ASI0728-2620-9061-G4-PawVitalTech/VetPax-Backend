@@ -14,6 +14,52 @@ public sealed class KeycloakVeterinarianIdentityDirectoryAdapter(
     IOptions<KeycloakOptions> options)
     : IVeterinarianIdentityDirectoryPort
 {
+    // Fetches clinic veterinarian profile from Keycloak (not only current JWT identity).
+    public async Task<VeterinarianPublicProfile?> GetVeterinarianProfileAsync(
+        Guid userId, CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty) return null;
+        var config = options.Value;
+        using var credentials = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["grant_type"] = "client_credentials",
+            ["client_id"] = config.AdminClientId,
+            ["client_secret"] = config.AdminClientSecret
+        });
+        using var tokenResponse = await http.PostAsync(
+            $"{config.Authority}/protocol/openid-connect/token", credentials, cancellationToken);
+        tokenResponse.EnsureSuccessStatusCode();
+        using var tokenJson = await JsonDocument.ParseAsync(
+            await tokenResponse.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken: cancellationToken);
+        var token = tokenJson.RootElement.GetProperty("access_token").GetString()!;
+        var adminBase = $"{config.BaseUrl.TrimEnd('/')}/admin/realms/{Uri.EscapeDataString(config.Realm)}";
+        using var request = AuthenticatedGet($"{adminBase}/users/{userId}", token);
+        using var response = await http.SendAsync(request, cancellationToken);
+        if (response.StatusCode == HttpStatusCode.NotFound) return null;
+        response.EnsureSuccessStatusCode();
+        using var profile = await JsonDocument.ParseAsync(
+            await response.Content.ReadAsStreamAsync(cancellationToken),
+            cancellationToken: cancellationToken);
+        var root = profile.RootElement;
+        static string? Field(JsonElement element, string key) =>
+            element.TryGetProperty(key, out var value) && value.ValueKind == JsonValueKind.String
+                ? value.GetString() : null;
+        static string? Attribute(JsonElement element, string key)
+        {
+            if (!element.TryGetProperty("attributes", out var attrs) ||
+                !attrs.TryGetProperty(key, out var field)) return null;
+            return field.ValueKind == JsonValueKind.Array && field.GetArrayLength() > 0
+                ? field[0].GetString() : field.ValueKind == JsonValueKind.String ? field.GetString() : null;
+        }
+        var fullName = string.Join(" ", new[] { Field(root, "firstName"), Field(root, "lastName") }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+        return new VeterinarianPublicProfile(
+            string.IsNullOrWhiteSpace(fullName) ? Field(root, "username") : fullName,
+            Attribute(root, "specialty"),
+            Attribute(root, "licenseNumber"));
+    }
+
     public async Task<bool> IsActiveVeterinarianAsync(
         Guid userId,
         CancellationToken cancellationToken = default)

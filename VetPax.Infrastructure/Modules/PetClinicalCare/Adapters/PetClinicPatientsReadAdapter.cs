@@ -50,7 +50,16 @@ public sealed class PetClinicPatientsReadAdapter(
                 id,
                 pet.Name,
                 pet.Species.ToString(),
-                lastAttention));
+                lastAttention,
+                pet.BirthDate,
+                pet.Breed,
+                pet.Sex?.ToString(),
+                pet.OwnerId.Value,
+                pet.TutorName,
+                pet.MicrochipNumber,
+                pet.InsuranceProvider,
+                pet.PolicyNumber,
+                pet.PhotoUrl));
         }
 
         return patients

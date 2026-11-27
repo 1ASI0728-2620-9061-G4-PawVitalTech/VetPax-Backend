@@ -14,6 +14,14 @@ public sealed class TestVeterinarianDirectory
         _allowed[veterinarianId] = 1;
     }
 
+    public Task<VeterinarianPublicProfile?> GetVeterinarianProfileAsync(
+        Guid userId, CancellationToken cancellationToken = default)
+    {
+        VeterinarianPublicProfile? profile = _allowed.ContainsKey(userId)
+            ? new VeterinarianPublicProfile("Test Veterinarian", null, null) : null;
+        return Task.FromResult(profile);
+    }
+
     public Task<bool> IsActiveVeterinarianAsync(
         Guid userId,
         CancellationToken cancellationToken = default)

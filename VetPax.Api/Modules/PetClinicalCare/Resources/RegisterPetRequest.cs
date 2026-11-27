@@ -7,5 +7,10 @@ public sealed record RegisterPetRequest(
     Species Species,
     DateOnly BirthDate,
     string? Breed = null,
-    Sex? Sex = null
+    Sex? Sex = null,
+    string? TutorName = null,
+    string? MicrochipNumber = null,
+    string? InsuranceProvider = null,
+    string? PolicyNumber = null,
+    string? PhotoUrl = null
 );

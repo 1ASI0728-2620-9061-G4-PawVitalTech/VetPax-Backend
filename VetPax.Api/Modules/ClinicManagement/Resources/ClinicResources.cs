@@ -43,14 +43,32 @@ public sealed record ClinicPatientResource(
     Guid PetId,
     string Name,
     string Species,
-    DateTime? LastAttentionDate)
+    DateTime? LastAttentionDate,
+    DateOnly BirthDate,
+    string? Breed,
+    string? Sex,
+    Guid OwnerId,
+    string? TutorName,
+    string? MicrochipNumber,
+    string? InsuranceProvider,
+    string? PolicyNumber,
+    string? PhotoUrl)
 {
     public static ClinicPatientResource From(PatientSummary patient) =>
         new(
             patient.PetId,
             patient.Name,
             patient.Species,
-            patient.LastAttentionDate);
+            patient.LastAttentionDate,
+            patient.BirthDate,
+            patient.Breed,
+            patient.Sex,
+            patient.OwnerId,
+            patient.TutorName,
+            patient.MicrochipNumber,
+            patient.InsuranceProvider,
+            patient.PolicyNumber,
+            patient.PhotoUrl);
 }
 
 public sealed record ClinicPatientsResponse(
