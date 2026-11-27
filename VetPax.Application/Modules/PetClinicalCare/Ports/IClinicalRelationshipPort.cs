@@ -11,4 +11,9 @@ public interface IClinicalRelationshipPort
         Guid petId,
         Guid clinicId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> HasActiveVeterinarianAccessToPetAsync(
+        Guid veterinarianId,
+        Guid petId,
+        CancellationToken cancellationToken = default);
 }

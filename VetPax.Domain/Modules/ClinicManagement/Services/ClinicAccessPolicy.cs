@@ -27,7 +27,8 @@ public sealed class ClinicAccessPolicy
         ClinicAccessRequester requester,
         ClinicId clinicId)
     {
-        return requester.IsVeterinarian() &&
+        return (requester.IsVeterinarian() ||
+                requester.IsAdministrator()) &&
                requester.ClinicId == clinicId;
     }
 }

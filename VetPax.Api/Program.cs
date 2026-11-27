@@ -12,6 +12,7 @@ using VetPax.Api.Modules.NutritionManagement.Adapters;
 using VetPax.Api.Modules.NutritionManagement.BackgroundServices;
 using VetPax.Api.Modules.AdherenceGamification.Adapters;
 using VetPax.Api.Modules.AdherenceGamification.BackgroundServices;
+using VetPax.Api.Realtime;
 
 using VetPax.Application.Common.Ports;
 using VetPax.Application.Modules.PetClinicalCare.UseCases.GetClinicalHistory;
@@ -71,6 +72,8 @@ builder.Services.AddControllers()
             new JsonStringEnumConverter()
         );
     });
+
+builder.Services.AddSingleton<RealtimeWebSocketManager>();
 
 // ============================================================
 // 2. CONFIGURACIÓN DE KEYCLOAK PARA OPENAPI / SWAGGER
@@ -399,6 +402,8 @@ using (var scope = app.Services.CreateScope())
 
 app.UseRouting();
 
+app.UseWebSockets();
+
 // Permitir solicitudes desde Angular.
 app.UseCors("VetPaxWeb");
 
@@ -410,6 +415,13 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 // Endpoints de VetPax.
+app.Map("/ws/updates", async context =>
+{
+    var connections = context.RequestServices
+        .GetRequiredService<RealtimeWebSocketManager>();
+    await RealtimeWebSocketEndpoint.HandleAsync(context, connections);
+});
+
 app.MapControllers();
 
 app.Run();

@@ -35,6 +35,27 @@ Escenario: Veterinario consulta un paciente realmente vinculado
     Entonces el código HTTP de clínica es 200
     Y la lista contiene la mascota vinculada
 
+Escenario: Administrador consulta los pacientes de su clínica
+    Dado que administro una clínica
+    Y hay una mascota vinculada a la clínica
+    Cuando el administrador consulta los pacientes
+    Entonces el código HTTP de clínica es 200
+    Y la lista contiene la mascota vinculada
+
+Escenario: Veterinario consulta una mascota vinculada
+    Dado que administro una clínica
+    Y tengo un veterinario vinculado
+    Y hay una mascota vinculada a la clínica
+    Cuando el veterinario consulta la mascota específica
+    Entonces el código HTTP de clínica es 200
+
+Escenario: Veterinario no vinculado no consulta una mascota
+    Dado que administro una clínica
+    Y tengo un veterinario vinculado
+    Y hay una mascota vinculada a la clínica
+    Cuando otro veterinario consulta la mascota específica
+    Entonces el código HTTP de clínica es 403
+
 Escenario: Veterinario no vinculado no consulta pacientes
     Dado que administro una clínica
     Y tengo un veterinario vinculado
