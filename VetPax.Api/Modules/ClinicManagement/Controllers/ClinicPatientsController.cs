@@ -6,7 +6,7 @@ using VetPax.Application.Modules.ClinicManagement.UseCases.GetClinicPatients;
 namespace VetPax.Api.Modules.ClinicManagement.Controllers;
 
 [ApiController]
-[Authorize(Roles = "veterinarian")]
+[Authorize(Roles = "veterinarian,clinic_administrator")]
 [Route("api/v1/clinics/{clinicId:guid}/patients")]
 public sealed class ClinicPatientsController(
     GetClinicPatientsHandler handler) : ControllerBase
