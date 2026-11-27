@@ -94,6 +94,11 @@ public sealed class VetPaxDbContext : DbContext
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
+            pet.Property(p => p.TutorName).HasMaxLength(150);
+            pet.Property(p => p.MicrochipNumber).HasMaxLength(100);
+            pet.Property(p => p.InsuranceProvider).HasMaxLength(150);
+            pet.Property(p => p.PolicyNumber).HasMaxLength(100);
+            pet.Property(p => p.PhotoUrl).HasMaxLength(2048);
             pet.Property(p => p.BirthDate);
             pet.Property(p => p.RegisteredAt);
 

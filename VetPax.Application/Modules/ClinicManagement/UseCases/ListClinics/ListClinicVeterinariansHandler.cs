@@ -6,7 +6,8 @@ namespace VetPax.Application.Modules.ClinicManagement.UseCases.ListClinics;
 
 public sealed class ListClinicVeterinariansHandler(
     IClinicDirectoryPort directory,
-    IClinicRepository clinics)
+    IClinicRepository clinics,
+    IVeterinarianIdentityDirectoryPort identities)
 {
     public async Task<IReadOnlyList<ClinicVeterinarianItem>>
         HandleAsync(
@@ -29,8 +30,21 @@ public sealed class ListClinicVeterinariansHandler(
                 "Clinic not found.");
         }
 
-        return await directory.GetActiveVeterinariansAsync(
-            clinicId,
-            cancellationToken);
+        var members = await directory.GetActiveVeterinariansAsync(
+            clinicId, cancellationToken);
+
+        var result = new List<ClinicVeterinarianItem>(members.Count);
+        foreach (var member in members)
+        {
+            var profile = await identities.GetVeterinarianProfileAsync(
+                member.VeterinarianId, cancellationToken);
+            result.Add(member with
+            {
+                FullName = profile?.FullName,
+                Specialty = profile?.Specialty,
+                LicenseNumber = profile?.LicenseNumber
+            });
+        }
+        return result;
     }
 }

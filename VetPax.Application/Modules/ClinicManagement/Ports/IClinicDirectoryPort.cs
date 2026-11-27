@@ -9,7 +9,10 @@ public sealed record ClinicDirectoryItem(
 );
 
 public sealed record ClinicVeterinarianItem(
-    Guid VeterinarianId
+    Guid VeterinarianId,
+    string? FullName = null,
+    string? Specialty = null,
+    string? LicenseNumber = null
 );
 
 public sealed record ClinicDirectoryPage(

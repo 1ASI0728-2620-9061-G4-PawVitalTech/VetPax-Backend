@@ -12,6 +12,11 @@ public sealed class Pet
     public string Name { get; }
     public Species Species { get; }
     public string? Breed { get; }
+    public string? TutorName { get; private set; }
+    public string? MicrochipNumber { get; private set; }
+    public string? InsuranceProvider { get; private set; }
+    public string? PolicyNumber { get; private set; }
+    public string? PhotoUrl { get; private set; }
     public Sex? Sex { get; }
 
     public DateOnly BirthDate { get; }
@@ -25,7 +30,12 @@ public sealed class Pet
         DateOnly birthDate,
         string? breed = null,
         Sex? sex = null,
-        DateTime? registeredAt = null)
+        DateTime? registeredAt = null,
+        string? tutorName = null,
+        string? microchipNumber = null,
+        string? insuranceProvider = null,
+        string? policyNumber = null,
+        string? photoUrl = null)
     {
         if (petId.Value == Guid.Empty)
             throw new ArgumentException(
@@ -69,7 +79,24 @@ public sealed class Pet
             : breed.Trim();
 
         Sex = sex;
+        TutorName = Optional(tutorName, 150);
+        MicrochipNumber = Optional(microchipNumber, 100);
+        InsuranceProvider = Optional(insuranceProvider, 150);
+        PolicyNumber = Optional(policyNumber, 100);
+        PhotoUrl = Optional(photoUrl, 2048);
+        if (PhotoUrl is not null && (!Uri.TryCreate(PhotoUrl, UriKind.Absolute, out var photo) ||
+            (photo.Scheme != Uri.UriSchemeHttp && photo.Scheme != Uri.UriSchemeHttps)))
+            throw new ArgumentException("Photo URL must be an absolute HTTP(S) URL.");
         RegisteredAt = registeredAt ?? DateTime.UtcNow;
+    }
+
+    private static string? Optional(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var normalized = value.Trim();
+        if (normalized.Length > maxLength) throw new ArgumentException(
+            $"Value must not exceed {maxLength} characters.");
+        return normalized;
     }
 
     public bool IsOwnedBy(OwnerId ownerId)
@@ -117,3 +144,4 @@ public sealed class Pet
     }
 
 }
+

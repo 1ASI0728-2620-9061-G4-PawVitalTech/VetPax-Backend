@@ -35,7 +35,12 @@ public sealed class GetPetHandler
             pet.BirthDate,
             pet.Breed,
             pet.Sex,
-            pet.RegisteredAt
+            pet.RegisteredAt,
+            pet.TutorName,
+            pet.MicrochipNumber,
+            pet.InsuranceProvider,
+            pet.PolicyNumber,
+            pet.PhotoUrl
         );
     }
 }

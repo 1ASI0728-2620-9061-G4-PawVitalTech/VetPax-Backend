@@ -12,7 +12,12 @@ public static class PetFactory
         Species species,
         DateOnly birthDate,
         string? breed = null,
-        Sex? sex = null)
+        Sex? sex = null,
+        string? tutorName = null,
+        string? microchipNumber = null,
+        string? insuranceProvider = null,
+        string? policyNumber = null,
+        string? photoUrl = null)
     {
         // Generate registration timestamp
         var registeredAt = DateTime.UtcNow;
@@ -26,7 +31,12 @@ public static class PetFactory
             birthDate,
             breed,
             sex,
-            registeredAt
+            registeredAt,
+            tutorName,
+            microchipNumber,
+            insuranceProvider,
+            policyNumber,
+            photoUrl
         );
 
         // Register the domain event

@@ -57,7 +57,12 @@ public sealed class PetsController : ControllerBase
                 request.Species,
                 request.BirthDate,
                 request.Breed,
-                request.Sex
+                request.Sex,
+                request.TutorName,
+                request.MicrochipNumber,
+                request.InsuranceProvider,
+                request.PolicyNumber,
+                request.PhotoUrl
             );
 
             var result = await _registerPetHandler.HandleAsync(
@@ -109,7 +114,12 @@ public sealed class PetsController : ControllerBase
             p.BirthDate,
             p.Breed,
             p.Sex?.ToString(),
-            p.RegisteredAt
+            p.RegisteredAt,
+            p.TutorName,
+            p.MicrochipNumber,
+            p.InsuranceProvider,
+            p.PolicyNumber,
+            p.PhotoUrl
         )).ToArray());
     }
 
@@ -162,7 +172,12 @@ public sealed class PetsController : ControllerBase
                 result.BirthDate,
                 result.Breed,
                 result.Sex?.ToString(),
-                result.RegisteredAt
+                result.RegisteredAt,
+                result.TutorName,
+                result.MicrochipNumber,
+                result.InsuranceProvider,
+                result.PolicyNumber,
+                result.PhotoUrl
             ));
         }
         catch (UnauthorizedAccessException)

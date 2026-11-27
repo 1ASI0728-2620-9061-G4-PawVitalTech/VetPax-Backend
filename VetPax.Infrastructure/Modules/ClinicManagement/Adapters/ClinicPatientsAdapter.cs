@@ -21,7 +21,16 @@ public sealed class ClinicPatientsAdapter(
             p.PetId,
             p.Name,
             p.Species,
-            p.LastAttentionDate
+            p.LastAttentionDate,
+            p.BirthDate,
+            p.Breed,
+            p.Sex,
+            p.OwnerId,
+            p.TutorName,
+            p.MicrochipNumber,
+            p.InsuranceProvider,
+            p.PolicyNumber,
+            p.PhotoUrl
         )).ToArray();
     }
 }
