@@ -53,4 +53,24 @@ public sealed class ClinicalRelationshipAdapter
                      && x.IsActive,
                 cancellationToken);
     }
+
+    public async Task<bool> HasActiveVeterinarianAccessToPetAsync(
+        Guid veterinarianId,
+        Guid petId,
+        CancellationToken cancellationToken = default)
+    {
+        if (veterinarianId == Guid.Empty || petId == Guid.Empty)
+            return false;
+
+        return await (
+                from membership in _db.ClinicVeterinarians.AsNoTracking()
+                join link in _db.PetClinicLinks.AsNoTracking()
+                    on membership.ClinicId equals link.ClinicId
+                where membership.VeterinarianId == veterinarianId
+                      && membership.IsActive
+                      && link.PetId == petId
+                      && link.IsActive
+                select membership.ClinicId)
+            .AnyAsync(cancellationToken);
+    }
 }

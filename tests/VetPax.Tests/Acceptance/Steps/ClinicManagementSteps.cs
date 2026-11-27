@@ -199,6 +199,39 @@ public sealed class ClinicManagementSteps
             "veterinarian");
     }
 
+    [When("el administrador consulta los pacientes")]
+    public Task WhenAdminGetsPatients()
+    {
+        return SendAsync(
+            HttpMethod.Get,
+            $"/api/v1/clinics/{_clinicId}/patients",
+            null,
+            _adminId,
+            "clinic_administrator");
+    }
+
+    [When("el veterinario consulta la mascota específica")]
+    public Task WhenVeterinarianGetsPet()
+    {
+        return SendAsync(
+            HttpMethod.Get,
+            $"/api/v1/pets/{_petId}",
+            null,
+            _vetId,
+            "veterinarian");
+    }
+
+    [When("otro veterinario consulta la mascota específica")]
+    public Task WhenOtherVeterinarianGetsPet()
+    {
+        return SendAsync(
+            HttpMethod.Get,
+            $"/api/v1/pets/{_petId}",
+            null,
+            Guid.NewGuid(),
+            "veterinarian");
+    }
+
     [When("otro veterinario consulta los pacientes")]
     public Task WhenOtherVetGetsPatients()
     {

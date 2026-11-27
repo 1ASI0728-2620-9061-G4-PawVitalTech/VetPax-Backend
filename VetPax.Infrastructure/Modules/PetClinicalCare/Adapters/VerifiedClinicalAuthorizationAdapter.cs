@@ -58,6 +58,20 @@ public sealed class VerifiedClinicalAuthorizationAdapter
             cancellationToken);
     }
 
+    public Task<bool> CanViewPetAsync(
+        Guid userId,
+        PetId petId,
+        CancellationToken cancellationToken = default)
+    {
+        if (userId == Guid.Empty || petId.Value == Guid.Empty)
+            return Task.FromResult(false);
+
+        return _relationships.HasActiveVeterinarianAccessToPetAsync(
+            userId,
+            petId.Value,
+            cancellationToken);
+    }
+
     public async Task<bool> IsAuthorizedAsync(
         PetId petId,
         AccessRequester requester,

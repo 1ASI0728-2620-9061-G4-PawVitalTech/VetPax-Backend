@@ -15,4 +15,9 @@ public interface IClinicalAuthorizationPort
         ClinicId clinicId,
         PetId petId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> CanViewPetAsync(
+        Guid userId,
+        PetId petId,
+        CancellationToken cancellationToken = default);
 }
