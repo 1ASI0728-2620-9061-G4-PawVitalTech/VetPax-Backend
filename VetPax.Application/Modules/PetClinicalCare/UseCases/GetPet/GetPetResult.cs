@@ -9,5 +9,10 @@ public sealed record GetPetResult(
     DateOnly BirthDate,
     string? Breed,
     Sex? Sex,
-    DateTime RegisteredAt
+    DateTime RegisteredAt,
+    string? TutorName = null,
+    string? MicrochipNumber = null,
+    string? InsuranceProvider = null,
+    string? PolicyNumber = null,
+    string? PhotoUrl = null
 );

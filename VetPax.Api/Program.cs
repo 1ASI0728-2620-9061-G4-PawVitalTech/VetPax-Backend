@@ -380,10 +380,8 @@ if (swaggerEnabled)
 // En desarrollo se aplican automáticamente.
 // En Railway Production deben ejecutarse por separado.
 
-if (app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
-
     var dbContext = scope.ServiceProvider
         .GetRequiredService<VetPaxDbContext>();
 

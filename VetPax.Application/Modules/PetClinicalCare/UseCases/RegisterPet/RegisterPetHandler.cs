@@ -33,7 +33,12 @@ public sealed class RegisterPetHandler
             command.Species,
             command.BirthDate,
             command.Breed,
-            command.Sex
+            command.Sex,
+            command.TutorName,
+            command.MicrochipNumber,
+            command.InsuranceProvider,
+            command.PolicyNumber,
+            command.PhotoUrl
         );
 
         // Create an empty clinical record

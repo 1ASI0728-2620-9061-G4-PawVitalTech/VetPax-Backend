@@ -75,6 +75,27 @@ public sealed class ClinicalAppointmentLinkAdapter
                 "Appointment or clinical attention is already linked.");
         }
 
+        // Stage the appointment status change in the same unit of work as the attention.
+        // A successful clinical-attention registration must not leave the appointment Pending.
+        var trackedAppointment = await _db.Appointments.SingleAsync(
+            x => x.AppointmentId == appointmentId, cancellationToken);
+        if (trackedAppointment.Status != AppointmentStatus.Pending)
+            throw new ClinicalAppointmentLinkConflictException(
+                "Appointment is no longer pending.");
+
+        trackedAppointment.Status = AppointmentStatus.Attended;
+        trackedAppointment.ClinicalAttentionId = clinicalAttentionId;
+        trackedAppointment.UpdatedAt = DateTime.UtcNow;
+        trackedAppointment.Version++;
+
+        var reminder = await _db.AppointmentReminders.SingleOrDefaultAsync(
+            x => x.AppointmentId == appointmentId, cancellationToken);
+        if (reminder is not null && reminder.Status == AppointmentReminderStatus.Pending)
+        {
+            reminder.Status = AppointmentReminderStatus.Cancelled;
+            reminder.UpdatedAtUtc = DateTime.UtcNow;
+        }
+
         _db.AppointmentAttentionLinks.Add(
             new AppointmentAttentionLinkRow
             {

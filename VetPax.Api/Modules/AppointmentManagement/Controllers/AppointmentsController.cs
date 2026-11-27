@@ -194,6 +194,24 @@ public sealed class AppointmentsController : ControllerBase
             }
         });
     }
+    // DELETE is a safe, auditable soft deletion: releases the appointment slot
+    // by transitioning Pending -> Cancelled (existing authorization/business rules).
+    [HttpDelete("{appointmentId:guid}")]
+    [Authorize(Roles = "owner,veterinarian")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public Task<IActionResult> Delete(
+        Guid appointmentId, CancellationToken cancellationToken)
+    {
+        return ExecuteAsync(async () =>
+        {
+            await _cancel.HandleAsync(
+                new CancelAppointmentCommand(appointmentId), cancellationToken);
+            return NoContent();
+        });
+    }
+
     [HttpGet("availability")]
     [Authorize(Roles = "owner,veterinarian")]
     [ProducesResponseType(
