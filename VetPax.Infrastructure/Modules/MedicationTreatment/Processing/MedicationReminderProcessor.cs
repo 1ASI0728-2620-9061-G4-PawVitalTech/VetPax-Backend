@@ -15,6 +15,11 @@ public sealed class MedicationReminderProcessor
     private readonly IMedicationNotificationSender _sender;
     private readonly TimeProvider _clock;
     private readonly ILogger<MedicationReminderProcessor> _logger;
+    
+    private const int MaxAttempts = 5;
+
+    private static readonly TimeSpan ReminderExpiration =
+        TimeSpan.FromHours(2);
 
     public MedicationReminderProcessor(
         VetPaxDbContext db,
@@ -32,11 +37,37 @@ public sealed class MedicationReminderProcessor
         CancellationToken cancellationToken = default)
     {
         var now = _clock.GetUtcNow().UtcDateTime;
+        
+        await _db.Set<MedicationReminderRow>()
+            .Where(x =>
+                x.Status == MedicationReminderDeliveryStatus.Pending &&
+                x.Attempts >= MaxAttempts &&
+                (x.LockedUntilUtc == null ||
+                 x.LockedUntilUtc <= now))
+            .ExecuteUpdateAsync(
+                update => update
+                    .SetProperty(
+                        x => x.Status,
+                        MedicationReminderDeliveryStatus.Failed)
+                    .SetProperty(
+                        x => x.LastError,
+                        "Maximum delivery attempts reached.")
+                    .SetProperty(
+                        x => x.LeaseToken,
+                        (Guid?)null)
+                    .SetProperty(
+                        x => x.LockedUntilUtc,
+                        (DateTime?)null)
+                    .SetProperty(
+                        x => x.UpdatedAtUtc,
+                        now),
+                cancellationToken);
 
         var candidates = await _db.Set<MedicationReminderRow>()
             .AsNoTracking()
             .Where(x =>
                 x.Status == MedicationReminderDeliveryStatus.Pending &&
+                x.Attempts < MaxAttempts &&
                 x.DueAtUtc <= now &&
                 x.NextAttemptAtUtc <= now &&
                 (x.LockedUntilUtc == null ||
@@ -60,6 +91,8 @@ public sealed class MedicationReminderProcessor
                 .Where(x =>
                     x.ReminderId == reminderId &&
                     x.Status == MedicationReminderDeliveryStatus.Pending &&
+                    x.Attempts < MaxAttempts &&
+                    x.DueAtUtc <= claimedAt &&
                     x.NextAttemptAtUtc <= claimedAt &&
                     (x.LockedUntilUtc == null ||
                      x.LockedUntilUtc <= claimedAt))
@@ -99,13 +132,31 @@ public sealed class MedicationReminderProcessor
                         x => x.PlanId == reminder.PlanId,
                         cancellationToken);
 
-                var eligible =
-                    plan is not null &&
-                    dose is not null &&
-                    plan.Status == MedicationPlanStatus.Active &&
-                    plan.RemindersEnabled &&
-                    dose.Status == MedicationDoseStatus.Pending &&
-                    dose.ScheduleVersion == plan.ScheduleVersion;
+                var currentUtc = _clock.GetUtcNow().UtcDateTime;
+
+                var eligible = false;
+
+                if (plan is not null && dose is not null)
+                {
+                    var zone = TimeZoneInfo.FindSystemTimeZoneById(
+                        plan.TimeZoneId);
+
+                    var localToday = DateOnly.FromDateTime(
+                        TimeZoneInfo.ConvertTimeFromUtc(
+                            currentUtc,
+                            zone));
+
+                    eligible =
+                        plan.Status == MedicationPlanStatus.Active &&
+                        plan.RemindersEnabled &&
+                        dose.Status == MedicationDoseStatus.Pending &&
+                        dose.ScheduleVersion == plan.ScheduleVersion &&
+                        localToday >= plan.StartDate &&
+                        (!plan.EndDate.HasValue ||
+                         localToday <= plan.EndDate.Value) &&
+                        currentUtc - dose.ScheduledAtUtc <=
+                        ReminderExpiration;
+                }
 
                 if (!eligible)
                 {
@@ -146,7 +197,7 @@ public sealed class MedicationReminderProcessor
                           d.Status == MedicationDoseStatus.Pending &&
                           d.ScheduleVersion == p.ScheduleVersion &&
                           p.Status == MedicationPlanStatus.Active &&
-                          p.RemindersEnabled
+                          p.RemindersEnabled && d.ScheduledAtUtc >= currentUtc.Subtract(ReminderExpiration)
                     select r.ReminderId
                 ).AnyAsync(cancellationToken);
 
@@ -224,6 +275,9 @@ public sealed class MedicationReminderProcessor
 
                 var retryAt = _clock.GetUtcNow()
                     .UtcDateTime.AddMinutes(minutes);
+                var nextStatus = attempts >= MaxAttempts
+                    ? MedicationReminderDeliveryStatus.Failed
+                    : MedicationReminderDeliveryStatus.Pending;
 
                 await _db.Set<MedicationReminderRow>()
                     .Where(x =>
@@ -233,6 +287,12 @@ public sealed class MedicationReminderProcessor
                             MedicationReminderDeliveryStatus.Pending)
                     .ExecuteUpdateAsync(
                         update => update
+                            .SetProperty(
+                                x => x.Status,
+                                nextStatus)
+                            .SetProperty(
+                                x => x.UpdatedAtUtc,
+                                _clock.GetUtcNow().UtcDateTime)
                             .SetProperty(
                                 x => x.NextAttemptAtUtc,
                                 retryAt)
@@ -245,6 +305,7 @@ public sealed class MedicationReminderProcessor
                             .SetProperty(
                                 x => x.LockedUntilUtc,
                                 (DateTime?)null),
+                        
                         cancellationToken);
             }
         }

@@ -119,10 +119,25 @@ public sealed class AppointmentNotificationAdapter
                 {
                     AppointmentId =
                         appointment.AppointmentId.Value,
+
                     OwnerId = appointment.OwnerId.Value,
+
                     DueAtUtc = reminderDue,
+
+                    NextAttemptAtUtc = reminderDue,
+
                     Status = AppointmentReminderStatus.Pending,
+
+                    Attempts = 0,
+
+                    LastError = null,
+
+                    LeaseToken = null,
+
+                    LockedUntilUtc = null,
+
                     UpdatedAtUtc = now,
+
                     SentAtUtc = null
                 });
 
@@ -131,7 +146,12 @@ public sealed class AppointmentNotificationAdapter
 
         existing.OwnerId = appointment.OwnerId.Value;
         existing.DueAtUtc = reminderDue;
+        existing.NextAttemptAtUtc = reminderDue;
         existing.Status = AppointmentReminderStatus.Pending;
+        existing.Attempts = 0;
+        existing.LastError = null;
+        existing.LeaseToken = null;
+        existing.LockedUntilUtc = null;
         existing.UpdatedAtUtc = now;
         existing.SentAtUtc = null;
     }
@@ -143,11 +163,18 @@ public sealed class AppointmentNotificationAdapter
         if (reminder is null)
             return;
 
-        // Conservamos evidencia de recordatorios ya enviados.
-        if (reminder.Status == AppointmentReminderStatus.Sent)
+        // Conservar los estados terminales.
+        if (reminder.Status != AppointmentReminderStatus.Pending)
             return;
 
         reminder.Status = AppointmentReminderStatus.Cancelled;
+
+        reminder.NextAttemptAtUtc = null;
+
+        reminder.LeaseToken = null;
+
+        reminder.LockedUntilUtc = null;
+
         reminder.UpdatedAtUtc = now;
     }
 }
