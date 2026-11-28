@@ -165,8 +165,15 @@ public sealed class ClinicalRecordsController : ControllerBase
 
             if (_realtime is not null)
             {
-                await _realtime.PublishAsync(
-                    RealtimeEvent.Create("clinical.attention.created"));
+                await _realtime.PublishClinicalAsync(
+                    petId,
+                    clinicId);
+
+                if (appointmentId.HasValue)
+                {
+                    await _realtime.PublishAppointmentAsync(
+                        appointmentId.Value);
+                }
             }
 
             return Created(

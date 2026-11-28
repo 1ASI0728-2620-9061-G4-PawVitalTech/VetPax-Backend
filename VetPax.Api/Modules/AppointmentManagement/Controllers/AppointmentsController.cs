@@ -85,8 +85,7 @@ public sealed class AppointmentsController : ControllerBase
 
             if (_realtime is not null)
             {
-                await _realtime.PublishAsync(
-                    RealtimeEvent.Create("appointment.updated"));
+                await _realtime.PublishAppointmentAsync(result);
             }
 
             return CreatedAtAction(
@@ -145,8 +144,7 @@ public sealed class AppointmentsController : ControllerBase
 
                     if (_realtime is not null)
                     {
-                        await _realtime.PublishAsync(
-                            RealtimeEvent.Create("appointment.updated"));
+                        await _realtime.PublishAppointmentAsync(result);
                     }
 
                     return Ok(
@@ -175,8 +173,7 @@ public sealed class AppointmentsController : ControllerBase
 
                     if (_realtime is not null)
                     {
-                        await _realtime.PublishAsync(
-                            RealtimeEvent.Create("appointment.updated"));
+                        await _realtime.PublishAppointmentAsync(result);
                     }
 
                     return Ok(
@@ -204,8 +201,7 @@ public sealed class AppointmentsController : ControllerBase
 
                     if (_realtime is not null)
                     {
-                        await _realtime.PublishAsync(
-                            RealtimeEvent.Create("appointment.updated"));
+                        await _realtime.PublishAppointmentAsync(result);
                     }
 
                     return Ok(
@@ -230,12 +226,20 @@ public sealed class AppointmentsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public Task<IActionResult> Delete(
-        Guid appointmentId, CancellationToken cancellationToken)
+        Guid appointmentId,
+        CancellationToken cancellationToken)
     {
         return ExecuteAsync(async () =>
         {
-            await _cancel.HandleAsync(
-                new CancelAppointmentCommand(appointmentId), cancellationToken);
+            var result = await _cancel.HandleAsync(
+                new CancelAppointmentCommand(appointmentId),
+                cancellationToken);
+
+            if (_realtime is not null)
+            {
+                await _realtime.PublishAppointmentAsync(result);
+            }
+
             return NoContent();
         });
     }
