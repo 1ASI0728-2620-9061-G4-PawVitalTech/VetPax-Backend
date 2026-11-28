@@ -169,4 +169,21 @@ public sealed class AppointmentRepository : IAppointmentRepository
         row.CreatedAt = appointment.CreatedAt;
         row.UpdatedAt = appointment.UpdatedAt;
     }
+    
+    public async Task<IReadOnlyList<Appointment>> FindByOwnerAsync(
+        AppointmentOwnerId ownerId,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await _db.Appointments
+            .AsNoTracking()
+            .Where(x => x.OwnerId == ownerId.Value)
+            .OrderByDescending(x => x.AppointmentDate)
+            .ThenByDescending(x => x.StartTime)
+            .ThenBy(x => x.AppointmentId)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(ToDomain)
+            .ToArray();
+    }
 }

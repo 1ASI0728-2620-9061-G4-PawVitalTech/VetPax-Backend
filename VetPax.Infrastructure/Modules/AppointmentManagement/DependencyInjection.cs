@@ -14,6 +14,7 @@ using VetPax.Infrastructure.Modules.AppointmentManagement.Adapters;
 using VetPax.Infrastructure.Modules.AppointmentManagement.Repositories;
 using VetPax.Application.Modules.PetClinicalCare.Ports;
 using VetPax.Application.Modules.AppointmentManagement.UseCases.GetAvailableSlots;
+using VetPax.Application.Modules.AppointmentManagement.UseCases.GetMyAppointments;
 
 namespace VetPax.Infrastructure.Modules.AppointmentManagement;
 
@@ -56,6 +57,7 @@ public static class DependencyInjection
         services.AddScoped<MarkAppointmentAttendedHandler>();
         services.AddScoped<GetVeterinarianAgendaHandler>();
         services.AddScoped<GetAppointmentHandler>();
+        services.AddScoped<GetMyAppointmentsHandler>();
         
         services.AddScoped<
             IClinicalAppointmentLinkPort,
