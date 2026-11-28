@@ -25,4 +25,8 @@ public interface IAppointmentRepository
         DateOnly from,
         DateOnly to,
         CancellationToken cancellationToken = default);
+    
+    Task<IReadOnlyList<Appointment>> FindByOwnerAsync(
+        AppointmentOwnerId ownerId,
+        CancellationToken cancellationToken = default);
 }
