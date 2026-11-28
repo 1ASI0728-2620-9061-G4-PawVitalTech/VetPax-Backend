@@ -78,10 +78,13 @@ public static class DependencyInjection
                 {
                     OnMessageReceived = context =>
                     {
-                        if (context.HttpContext.Request.Path.StartsWithSegments(
-                                "/ws/updates") &&
-                            context.HttpContext.Request.Query.TryGetValue(
-                                "access_token", out var token))
+                        var request = context.HttpContext.Request;
+
+                        if (request.Path == "/ws/updates" &&
+                            context.HttpContext.WebSockets.IsWebSocketRequest &&
+                            request.Query.TryGetValue(
+                                "access_token",
+                                out var token))
                         {
                             context.Token = token.ToString();
                         }
