@@ -55,17 +55,29 @@ public enum AppointmentReminderStatus
 {
     Pending,
     Sent,
-    Cancelled
+    Cancelled,
+    Failed
 }
 
 public sealed class AppointmentReminderRow
 {
     public Guid AppointmentId { get; set; }
+
     public Guid OwnerId { get; set; }
 
     public DateTime DueAtUtc { get; set; }
 
+    public DateTime? NextAttemptAtUtc { get; set; }
+
     public AppointmentReminderStatus Status { get; set; }
+
+    public int Attempts { get; set; }
+
+    public string? LastError { get; set; }
+
+    public Guid? LeaseToken { get; set; }
+
+    public DateTime? LockedUntilUtc { get; set; }
 
     public DateTime UpdatedAtUtc { get; set; }
 

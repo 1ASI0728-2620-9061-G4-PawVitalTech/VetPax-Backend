@@ -16,29 +16,12 @@ public static class MedicationFirebaseRegistration
         ArgumentNullException.ThrowIfNull(configuration);
 
         services.AddScoped<MedicationDeviceTokenStore>();
+
         services.AddScoped<
             IMedicationPushGateway,
             MedicationFirebasePushGateway>();
+
         services.AddSingleton<FirebaseMessaging>(_ =>
-        {
-            var projectId = configuration["Firebase:ProjectId"];
-
-            if (string.IsNullOrWhiteSpace(projectId))
-                throw new InvalidOperationException(
-                    "Firebase:ProjectId is not configured.");
-
-            var app = FirebaseApp.Create(
-                new AppOptions
-                {
-                    Credential = GoogleCredential.GetApplicationDefault(),
-                    ProjectId = projectId
-                },
-                $"VetPaxMedication-{Guid.NewGuid():N}");
-
-            return FirebaseMessaging.GetMessaging(app);
-        });
-
-        services.AddSingleton(_ =>
         {
             var projectId = configuration["Firebase:ProjectId"];
 
@@ -48,17 +31,21 @@ public static class MedicationFirebaseRegistration
                     "Firebase:ProjectId is not configured.");
             }
 
-            // Application Default Credentials.
-            // No almacenar credenciales dentro del proyecto.
+            var credentialsJson =
+                configuration["Firebase:CredentialsJson"];
+
+            var credential =
+                string.IsNullOrWhiteSpace(credentialsJson)
+                    ? GoogleCredential.GetApplicationDefault()
+                    : GoogleCredential.FromJson(credentialsJson);
+
             var app = FirebaseApp.Create(
                 new AppOptions
                 {
-                    Credential =
-                        GoogleCredential.GetApplicationDefault(),
-
+                    Credential = credential,
                     ProjectId = projectId
                 },
-                $"VetPaxMedication-{Guid.NewGuid():N}");
+                $"VetPax-{Guid.NewGuid():N}");
 
             return FirebaseMessaging.GetMessaging(app);
         });

@@ -78,7 +78,8 @@ public enum MedicationReminderDeliveryStatus
 {
     Pending = 1,
     Sent = 2,
-    Cancelled = 3
+    Cancelled = 3,
+    Failed = 4
 }
 
 public sealed class MedicationReminderRow
