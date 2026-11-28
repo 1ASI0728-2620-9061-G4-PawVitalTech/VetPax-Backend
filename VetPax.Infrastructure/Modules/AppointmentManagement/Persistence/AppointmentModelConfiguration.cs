@@ -187,56 +187,83 @@ public static class AppointmentModelConfiguration
     }
 
     private static void ConfigureReminders(
-        ModelBuilder modelBuilder)
+    ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<AppointmentReminderRow>(entity =>
     {
-        modelBuilder.Entity<AppointmentReminderRow>(entity =>
+        entity.ToTable("appointment_reminders");
+
+        entity.HasKey(x => x.AppointmentId);
+
+        entity.Property(x => x.AppointmentId)
+            .HasColumnName("appointment_id")
+            .ValueGeneratedNever();
+
+        entity.Property(x => x.OwnerId)
+            .HasColumnName("owner_id")
+            .IsRequired();
+
+        entity.Property(x => x.DueAtUtc)
+            .HasColumnName("due_at_utc")
+            .HasColumnType("datetime(6)")
+            .IsRequired();
+
+        entity.Property(x => x.NextAttemptAtUtc)
+            .HasColumnName("next_attempt_at_utc")
+            .HasColumnType("datetime(6)");
+
+        entity.Property(x => x.Status)
+            .HasColumnName("status")
+            .HasConversion<string>()
+            .HasMaxLength(16)
+            .IsRequired();
+
+        entity.Property(x => x.Attempts)
+            .HasColumnName("attempts")
+            .HasDefaultValue(0);
+
+        entity.Property(x => x.LastError)
+            .HasColumnName("last_error")
+            .HasMaxLength(1024);
+
+        entity.Property(x => x.LeaseToken)
+            .HasColumnName("lease_token");
+
+        entity.Property(x => x.LockedUntilUtc)
+            .HasColumnName("locked_until_utc")
+            .HasColumnType("datetime(6)");
+
+        entity.Property(x => x.UpdatedAtUtc)
+            .HasColumnName("updated_at_utc")
+            .HasColumnType("datetime(6)")
+            .IsConcurrencyToken()
+            .IsRequired();
+
+        entity.Property(x => x.SentAtUtc)
+            .HasColumnName("sent_at_utc")
+            .HasColumnType("datetime(6)");
+
+        entity.HasIndex(x => new
         {
-            entity.ToTable("appointment_reminders");
+            x.Status,
+            x.DueAtUtc
+        })
+        .HasDatabaseName("ix_appointment_reminders_due");
 
-            entity.HasKey(x => x.AppointmentId);
+        entity.HasIndex(x => new
+        {
+            x.Status,
+            x.NextAttemptAtUtc
+        })
+        .HasDatabaseName("ix_appointment_reminders_retry");
 
-            entity.Property(x => x.AppointmentId)
-                .HasColumnName("appointment_id")
-                .ValueGeneratedNever();
-
-            entity.Property(x => x.OwnerId)
-                .HasColumnName("owner_id")
-                .IsRequired();
-
-            entity.Property(x => x.DueAtUtc)
-                .HasColumnName("due_at_utc")
-                .HasColumnType("datetime(6)")
-                .IsRequired();
-
-            entity.Property(x => x.Status)
-                .HasColumnName("status")
-                .HasConversion<string>()
-                .HasMaxLength(16)
-                .IsRequired();
-
-            entity.Property(x => x.UpdatedAtUtc)
-                .HasColumnName("updated_at_utc")
-                .HasColumnType("datetime(6)")
-                .IsRequired();
-
-            entity.Property(x => x.SentAtUtc)
-                .HasColumnName("sent_at_utc")
-                .HasColumnType("datetime(6)");
-
-            entity.HasIndex(x => new
-            {
-                x.Status,
-                x.DueAtUtc
-            })
-            .HasDatabaseName("ix_appointment_reminders_due");
-
-            entity.HasOne<AppointmentRow>()
-                .WithOne()
-                .HasForeignKey<AppointmentReminderRow>(
-                    x => x.AppointmentId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-    }
+        entity.HasOne<AppointmentRow>()
+            .WithOne()
+            .HasForeignKey<AppointmentReminderRow>(
+                x => x.AppointmentId)
+            .OnDelete(DeleteBehavior.Restrict);
+    });
+}
 
     private static void ConfigureClinicalAttentionLinks(
         ModelBuilder modelBuilder)

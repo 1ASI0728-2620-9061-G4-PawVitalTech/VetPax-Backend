@@ -369,9 +369,32 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         .HasColumnType("char(36)")
                         .HasColumnName("appointment_id");
 
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
                     b.Property<DateTime>("DueAtUtc")
                         .HasColumnType("datetime(6)")
                         .HasColumnName("due_at_utc");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(1024)
+                        .HasColumnType("varchar(1024)")
+                        .HasColumnName("last_error");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("char(36)")
+                        .HasColumnName("lease_token");
+
+                    b.Property<DateTime?>("LockedUntilUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("locked_until_utc");
+
+                    b.Property<DateTime?>("NextAttemptAtUtc")
+                        .HasColumnType("datetime(6)")
+                        .HasColumnName("next_attempt_at_utc");
 
                     b.Property<Guid>("OwnerId")
                         .HasColumnType("char(36)")
@@ -388,6 +411,7 @@ namespace VetPax.Infrastructure.Persistence.Migrations
                         .HasColumnName("status");
 
                     b.Property<DateTime>("UpdatedAtUtc")
+                        .IsConcurrencyToken()
                         .HasColumnType("datetime(6)")
                         .HasColumnName("updated_at_utc");
 
@@ -395,6 +419,9 @@ namespace VetPax.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Status", "DueAtUtc")
                         .HasDatabaseName("ix_appointment_reminders_due");
+
+                    b.HasIndex("Status", "NextAttemptAtUtc")
+                        .HasDatabaseName("ix_appointment_reminders_retry");
 
                     b.ToTable("appointment_reminders", (string)null);
                 });

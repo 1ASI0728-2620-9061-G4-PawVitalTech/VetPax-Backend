@@ -248,14 +248,12 @@ builder.Services.AddClinicManagementInfrastructure();
 builder.Services.AddAppointmentManagementInfrastructure();
 
 builder.Services.AddScoped<AppointmentOutboxProcessor>();
+
 builder.Services.AddScoped<AppointmentReminderProcessor>();
 
-builder.Services.AddHttpClient<
+builder.Services.AddScoped<
     IAppointmentReminderSender,
-    AppointmentReminderWebhookSender>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(30);
-});
+    AppointmentFirebaseReminderSender>();
 
 builder.Services.AddHostedService<
     AppointmentDeliveryHostedService>();
