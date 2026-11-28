@@ -402,7 +402,17 @@ using (var scope = app.Services.CreateScope())
 
 app.UseRouting();
 
-app.UseWebSockets();
+var webSocketOptions = new WebSocketOptions
+{
+    KeepAliveInterval = TimeSpan.FromSeconds(30)
+};
+
+foreach (var origin in allowedOrigins)
+{
+    webSocketOptions.AllowedOrigins.Add(origin);
+}
+
+app.UseWebSockets(webSocketOptions);
 
 // Permitir solicitudes desde Angular.
 app.UseCors("VetPaxWeb");
@@ -416,11 +426,15 @@ app.UseAuthorization();
 
 // Endpoints de VetPax.
 app.Map("/ws/updates", async context =>
-{
-    var connections = context.RequestServices
-        .GetRequiredService<RealtimeWebSocketManager>();
-    await RealtimeWebSocketEndpoint.HandleAsync(context, connections);
-});
+    {
+        var connections = context.RequestServices
+            .GetRequiredService<RealtimeWebSocketManager>();
+
+        await RealtimeWebSocketEndpoint.HandleAsync(
+            context,
+            connections);
+    })
+    .RequireAuthorization();
 
 app.MapControllers();
 
